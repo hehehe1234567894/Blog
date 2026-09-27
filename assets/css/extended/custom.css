@@ -187,7 +187,7 @@ html {
   background-image: linear-gradient(165deg, #fffafc 0%, #f4f7ff 48%, #f0fbf7 100%);
   background-attachment: fixed;
 }
-[data-theme="dark"] html {
+html[data-theme="dark"] {
   background-image:
     radial-gradient(1200px 620px at 18% -12%, rgba(34, 211, 238, .16), transparent 62%),
     radial-gradient(1000px 560px at 88% 0%, rgba(167, 139, 250, .16), transparent 60%),
@@ -322,7 +322,7 @@ html {
   background-image: linear-gradient(160deg, rgba(255, 209, 230, .62), rgba(228, 214, 255, .55) 45%, rgba(205, 235, 255, .55));
   background-attachment: fixed;
 }
-[data-theme="dark"] html {
+html[data-theme="dark"] {
   background-image: linear-gradient(160deg, rgba(70, 22, 58, .55), rgba(38, 26, 78, .5) 45%, rgba(16, 42, 74, .5));
 }
 body, .list { background: transparent !important; }
@@ -435,3 +435,71 @@ body::before {
   #bg-canvas { opacity: .8; }
   body::before { height: 34vh; }
 }
+
+
+/* ===== 主题区分与细节（参考 CSS-Inspiration / ui-buttons / daisyUI 的常见做法）===== */
+
+/* 浅色：干净的白 + 薄荷/天蓝/淡紫柔光 */
+html:not([data-theme="dark"]) {
+  --accent-a: #7c3aed;   /* 紫 */
+  --accent-b: #ec4899;   /* 粉 */
+}
+/* 深色：近黑底 + 青绿/青色/紫的极光，文字用冷白 */
+html[data-theme="dark"] {
+  --accent-a: #22d3ee;   /* 青 */
+  --accent-b: #a78bfa;   /* 紫 */
+}
+
+/* 站点标题用一点渐变字，两套主题各有各的颜色 */
+.logo a {
+  background: linear-gradient(96deg, var(--accent-a), var(--accent-b));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 卡片：鼠标位置的柔光（CSS-Inspiration 里常见的 spotlight 手法） */
+.post-entry { position: relative; overflow: hidden; }
+.post-entry::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .35s var(--ease-out);
+  background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%),
+              color-mix(in srgb, var(--accent-a) 22%, transparent), transparent 62%);
+}
+.post-entry:hover::after { opacity: 1; }
+/* 悬停时描边染上主题色 */
+.post-entry:hover {
+  border-color: color-mix(in srgb, var(--accent-a) 45%, transparent) !important;
+  transform: translateY(-4px);
+}
+
+/* 标签、翻页按钮：药丸形 + 主题色描边（ui-buttons 的风格） */
+.post-tags a,
+.paginav a,
+.entry-footer a {
+  border-radius: 999px;
+  transition: color .2s var(--ease-out), border-color .2s var(--ease-out),
+              background-color .2s var(--ease-out), transform .2s var(--ease-out);
+}
+.post-tags a {
+  padding: 2px 10px;
+  border: 1px solid var(--border);
+}
+.post-tags a:hover {
+  color: var(--accent-a);
+  border-color: color-mix(in srgb, var(--accent-a) 55%, transparent);
+  background: color-mix(in srgb, var(--accent-a) 10%, transparent);
+  transform: translateY(-1px);
+}
+
+/* 深色下正文里的链接强调色换成青色，浅色下是紫色 */
+.post-content a { color: var(--primary); }
+.post-content a:hover { color: var(--accent-a); }
+
+/* 顶部阅读进度条换成主题渐变 */
+#reading-progress { background: linear-gradient(90deg, var(--accent-a), var(--accent-b)); }
