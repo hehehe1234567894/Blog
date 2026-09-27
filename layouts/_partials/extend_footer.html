@@ -42,8 +42,17 @@
         io.unobserve(e.target);
       }
     });
-  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+  }, { rootMargin: '0px 0px 0px 0px', threshold: 0.01 });
   items.forEach(function (el) { io.observe(el); });
+  // 兜底 1：已经在视口里的立刻显示（首屏不该等）
+  items.forEach(function (el) {
+    var r = el.getBoundingClientRect();
+    if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('is-visible');
+  });
+  // 兜底 2：观察器万一没触发（截图工具、老浏览器），2.5 秒后全部显示
+  setTimeout(function () {
+    items.forEach(function (el) { el.classList.add('is-visible'); });
+  }, 2500);
 })();
 </script>
 

@@ -227,3 +227,46 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   #bg-blobs i { animation: none !important; }
 }
+
+/* ===== 观感微调（按截图反馈调整）===== */
+
+/* 1) 卡片从光晕背景里“浮”出来：加深描边 + 极轻阴影 */
+.post-entry {
+  border: 1px solid rgba(0, 0, 0, .10);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
+}
+.dark .post-entry {
+  border-color: rgba(255, 255, 255, .12);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .40);
+}
+
+/* 2) 次要文字加深一档，光晕底色下不至于发灰 */
+[data-theme="light"] .entry-hint,
+[data-theme="light"] .entry-hint-parent,
+[data-theme="light"] .post-meta,
+[data-theme="light"] .breadcrumbs { color: #59616d; }
+
+/* 3) 首页信息卡到文章列表之间收一点空隙 */
+.first-entry { margin: 1.4rem 0 1.6rem; }
+
+/* 4) 代码块：圆角 + 更松的内边距 */
+.md-content pre,
+.post-content pre {
+  border-radius: 10px;
+  padding: 14px 16px !important;
+  overflow: hidden;
+}
+.md-content pre code,
+.post-content pre code { background: transparent; }
+.md-content .highlight,
+.post-content .highlight { border-radius: 10px; }
+
+/* 5) 左下角那块青绿光晕降一档，整体更均匀 */
+#bg-blobs i:nth-child(3) {
+  background: radial-gradient(circle at 50% 50%, rgba(45, 212, 191, .24), transparent 72%);
+}
+
+/* 6) 图片/表格/引用块和代码块保持同一套圆角语言 */
+.post-content img { border-radius: 10px; }
+.post-content blockquote { border-radius: 0 10px 10px 0; }
+.post-content table { border-radius: 10px; overflow: hidden; }
