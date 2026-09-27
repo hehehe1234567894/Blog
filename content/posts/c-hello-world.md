@@ -8,10 +8,11 @@ ShowToc: true
 TocOpen: false
 draft: false
 cover:
-  image: "/images/covers/c.png"
+  image: "/images/covers/c.svg"
   alt: "C 语言环境配置封面"
   relative: false
   hiddenInSingle: true
+images: ["https://blog.funnycode.site/og.png"]   # 分享预览图（SVG 封面不能当缩略图）
 ---
 很多同学第一次学 C 语言，卡住的不是语法，而是**环境**：代码写完了，不知道按哪里才能跑起来。
 这篇就把这件事一次讲清楚——从装编译器到用 VS Code 写代码，全部走一遍。

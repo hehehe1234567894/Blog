@@ -7,10 +7,11 @@ categories: ["折腾记录"]
 ShowToc: true
 draft: false
 cover:
-  image: "/images/covers/site.png"
+  image: "/images/covers/site.svg"
   alt: "建站教程封面"
   relative: false
   hiddenInSingle: true
+images: ["https://blog.funnycode.site/og.png"]   # 分享预览图（SVG 封面不能当缩略图）
 ---
 
 ## 一、为什么选这条路
