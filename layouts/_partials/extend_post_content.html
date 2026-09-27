@@ -1,0 +1,24 @@
+{{- /* 文章底部：相关文章（按共同标签，找不到就退化为其它最新文章） */ -}}
+{{- $cur := . -}}
+{{- $others := where (where site.RegularPages "Section" "posts") "Permalink" "ne" $cur.Permalink -}}
+{{- $hits := slice -}}
+{{- range $others -}}
+  {{- if gt (len (intersect ($cur.Params.tags | default slice) (.Params.tags | default slice))) 0 -}}
+    {{- $hits = $hits | append . -}}
+  {{- end -}}
+{{- end -}}
+{{- $list := $hits -}}
+{{- if not $list -}}{{- $list = first 2 $others -}}{{- end -}}
+{{- with $list }}
+<section class="related-posts">
+  <h3>相关文章</h3>
+  <ul>
+    {{- range first 3 . }}
+    <li>
+      <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+      <span class="related-date">{{ .Date.Format "2006-01-02" }}</span>
+    </li>
+    {{- end }}
+  </ul>
+</section>
+{{- end }}

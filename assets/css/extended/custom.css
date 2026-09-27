@@ -121,3 +121,62 @@ h3 {
   .post-single .post-header { animation: none !important; }
   #reading-progress { display: none; }
 }
+
+/* ===== 跨页面转场（View Transitions，不支持的浏览器自动忽略）===== */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: vt-out .18s ease both; }
+::view-transition-new(root) { animation: vt-in .3s var(--ease-out) both; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
+
+/* ===== 图片：圆角、悬停阴影、点击放大 ===== */
+.post-content img {
+  border-radius: 6px;
+  transition: transform .3s var(--ease-out), box-shadow .3s var(--ease-out);
+}
+.post-content img:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.16); }
+.lightbox {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: rgba(0,0,0,.82);
+  opacity: 0; cursor: zoom-out;
+  transition: opacity .2s ease;
+}
+.lightbox.open { opacity: 1; }
+.lightbox img {
+  max-width: 94vw; max-height: 92vh; border-radius: 8px;
+  transform: scale(.96);
+  transition: transform .25s var(--ease-out);
+}
+.lightbox.open img { transform: scale(1); }
+
+/* ===== 目录：当前小节高亮 ===== */
+#TableOfContents a { display: inline-block; transition: color .2s var(--ease-out), transform .2s var(--ease-out); }
+#TableOfContents a:hover { transform: translateX(2px); }
+#TableOfContents a.active { color: var(--primary); font-weight: 600; }
+
+/* ===== 相关文章 ===== */
+.related-posts { margin-top: 2.4rem; }
+.related-posts h3 { font-size: 1.05rem; margin: 0 0 .6rem; }
+.related-posts ul { list-style: none; margin: 0; padding: 0; }
+.related-posts li {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+  padding: .5rem 0; border-bottom: 1px dashed var(--border);
+}
+.related-posts li a { display: inline-block; transition: transform .2s var(--ease-out); }
+.related-posts li a:hover { transform: translateX(3px); }
+.related-date { color: var(--secondary); font-size: .82rem; white-space: nowrap; }
+
+/* ===== 正文小修饰：引用块、表格、行内代码 ===== */
+.post-content blockquote {
+  border-left: 3px solid var(--primary);
+  background: var(--code-bg);
+  padding: .7rem 1rem; border-radius: 0 6px 6px 0;
+}
+.post-content table tr:nth-child(even) { background: var(--code-bg); }
+.post-content code { border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+  .post-content img:hover { transform: none; }
+}
