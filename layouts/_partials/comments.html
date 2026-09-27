@@ -1,0 +1,24 @@
+{{- /* 评论区：Giscus（基于 GitHub Discussions）—— 覆盖主题里的空占位 */ -}}
+{{- $g := site.Params.giscus -}}
+{{- if and $g $g.repo $g.repoId $g.categoryId -}}
+<div class="post-comments" style="margin-top:2.5rem">
+  <h2 style="font-size:1.25rem;margin-bottom:1rem">评论</h2>
+  <script src="https://giscus.app/client.js"
+          data-repo="{{ $g.repo }}"
+          data-repo-id="{{ $g.repoId }}"
+          data-category="{{ $g.category }}"
+          data-category-id="{{ $g.categoryId }}"
+          data-mapping="{{ $g.mapping | default "pathname" }}"
+          data-strict="{{ $g.strict | default "0" }}"
+          data-reactions-enabled="{{ $g.reactionsEnabled | default "1" }}"
+          data-emit-metadata="{{ $g.emitMetadata | default "0" }}"
+          data-input-position="{{ $g.inputPosition | default "top" }}"
+          data-theme="{{ $g.theme | default "preferred_color_scheme" }}"
+          data-lang="{{ $g.lang | default "zh-CN" }}"
+          data-loading="lazy"
+          crossorigin="anonymous"
+          async>
+  </script>
+  <noscript>评论需要 JavaScript（基于 GitHub Discussions，用 GitHub 账号登录即可发言）。</noscript>
+</div>
+{{- end -}}

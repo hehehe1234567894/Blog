@@ -49,7 +49,21 @@ summaryLength = 80
   hideSummary = false
   disableSpecial1stPost = false
   disableScrollToTop = false
-  comments = false
+  comments = true                 # 打开评论区（由 layouts/_partials/comments.html 渲染）
+
+  # Giscus 评论：基于 GitHub Discussions
+  [params.giscus]
+    repo = "hehehe1234567894/Blog"
+    repoId = "R_kgDOUuJ_eg"
+    category = "Announcements"
+    categoryId = "DIC_kwDOUuJ_es4DGf-1"
+    mapping = "pathname"          # 一篇文章一个讨论帖
+    strict = "0"
+    reactionsEnabled = "1"
+    emitMetadata = "0"
+    inputPosition = "top"
+    theme = "preferred_color_scheme"
+    lang = "zh-CN"
 
   [params.assets]
     favicon = "favicon.ico"
