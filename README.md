@@ -1,4 +1,4 @@
-# 指针与烙铁 · 博客
+# 博客
 
 Hugo + PaperMod 的静态博客，托管在 **GitHub Pages**。
 
