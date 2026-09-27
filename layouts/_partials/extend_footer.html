@@ -1,10 +1,120 @@
-{{- /* 主题扩展：少量前端动效（滚动渐显 / 阅读进度 / 导航栏状态） */ -}}
+{{- /* 主题扩展：二次元风动态背景（花瓣 + 星点）＋ 阅读进度 ＋ 滚动渐显 ＋ 图片放大 ＋ 目录高亮 */ -}}
 <script>
 (function () {
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var header = document.querySelector('.header');
+  var themeDark = function () {
+    var t = document.documentElement.dataset.theme;
+    if (t === 'dark') return true;
+    if (t === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  };
 
-  // 顶部阅读进度条（只在文章页）
+  /* ---------- 1. 背景：飘落的花瓣 + 闪烁星点 ---------- */
+  var canvas = document.createElement('canvas');
+  canvas.id = 'bg-canvas';
+  document.body.insertBefore(canvas, document.body.firstChild);
+  var ctx = canvas.getContext('2d');
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  var W = 0, H = 0, petals = [], stars = [], raf = null, tick = 0;
+
+  function palette() {
+    // 二次元配色：樱粉 / 紫罗兰 / 冰蓝
+    return themeDark()
+      ? { petal: '255,170,205', petal2: '255,225,240', star: '180,225,255', lw: 1 }
+      : { petal: '240,120,170', petal2: '255,190,215', star: '120,170,230', lw: 1 };
+  }
+
+  function resize() {
+    W = canvas.width = Math.floor(window.innerWidth * dpr);
+    H = canvas.height = Math.floor(window.innerHeight * dpr);
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    var area = window.innerWidth * window.innerHeight;
+    var np = Math.round(Math.min(34, Math.max(14, area / 42000)));
+    var ns = Math.round(Math.min(30, Math.max(10, area / 55000)));
+    petals = [];
+    for (var i = 0; i < np; i++) {
+      petals.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: (Math.random() * 5 + 4) * dpr,
+        vy: (Math.random() * 0.35 + 0.25) * dpr,
+        sway: Math.random() * 2 + 1,
+        phase: Math.random() * 6.283,
+        rot: Math.random() * 6.283,
+        vr: (Math.random() - 0.5) * 0.02
+      });
+    }
+    stars = [];
+    for (var j = 0; j < ns; j++) {
+      stars.push({
+        x: Math.random() * W, y: Math.random() * H * 0.9,
+        r: (Math.random() * 1.2 + 0.6) * dpr,
+        phase: Math.random() * 6.283
+      });
+    }
+  }
+
+  function petalPath(x, y, r, rot) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.bezierCurveTo(r * 0.95, -r * 0.55, r * 0.8, r * 0.6, 0, r);
+    ctx.bezierCurveTo(-r * 0.8, r * 0.6, -r * 0.95, -r * 0.55, 0, -r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function draw() {
+    var c = palette();
+    ctx.clearRect(0, 0, W, H);
+    tick += 0.016;
+
+    // 星点：缓慢明灭
+    for (var s = 0; s < stars.length; s++) {
+      var st = stars[s];
+      var a = 0.18 + 0.28 * (0.5 + 0.5 * Math.sin(tick * 1.6 + st.phase));
+      ctx.beginPath();
+      ctx.arc(st.x, st.y, st.r, 0, 6.28318);
+      ctx.fillStyle = 'rgba(' + c.star + ',' + a.toFixed(3) + ')';
+      ctx.fill();
+    }
+
+    // 花瓣：飘落 + 左右摇摆 + 自转
+    for (var i = 0; i < petals.length; i++) {
+      var p = petals[i];
+      if (!reduce) {
+        p.y += p.vy;
+        p.x += Math.sin(tick * 0.8 + p.phase) * 0.45 * dpr * p.sway;
+        p.rot += p.vr;
+        if (p.y - p.r > H) { p.y = -p.r * 2; p.x = Math.random() * W; }
+        if (p.x < -p.r * 3) p.x = W + p.r;
+        if (p.x > W + p.r * 3) p.x = -p.r;
+      }
+      ctx.globalAlpha = 0.75;
+      ctx.fillStyle = 'rgba(' + c.petal + ',1)';
+      petalPath(p.x, p.y, p.r, p.rot);
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = 'rgba(' + c.petal2 + ',1)';
+      petalPath(p.x + p.r * 0.5, p.y + p.r * 0.4, p.r * 0.62, p.rot + 0.7);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function loop() { draw(); raf = requestAnimationFrame(loop); }
+  resize();
+  if (reduce) { draw(); } else { loop(); }
+  window.addEventListener('resize', function () { resize(); if (reduce) draw(); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+    else if (!reduce && !raf) { loop(); }
+  });
+  new MutationObserver(function () { if (reduce) draw(); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  /* ---------- 2. 顶部阅读进度条（只在文章页） ---------- */
   if (document.querySelector('.post-single')) {
     var bar = document.createElement('div');
     bar.id = 'reading-progress';
@@ -12,60 +122,49 @@
     var onScroll = function () {
       var h = document.documentElement;
       var max = h.scrollHeight - h.clientHeight;
-      var p = max > 0 ? h.scrollTop / max : 0;
-      bar.style.transform = 'scaleX(' + Math.min(1, Math.max(0, p)) + ')';
+      bar.style.transform = 'scaleX(' + Math.min(1, Math.max(0, max > 0 ? h.scrollTop / max : 0)) + ')';
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
   }
 
-  // 导航栏滚动状态
+  /* ---------- 3. 导航栏滚动状态 ---------- */
+  var header = document.querySelector('.header');
   if (header) {
-    var mark = function () {
-      header.classList.toggle('is-scrolled', window.scrollY > 12);
-    };
+    var mark = function () { header.classList.toggle('is-scrolled', window.scrollY > 12); };
     window.addEventListener('scroll', mark, { passive: true });
     mark();
   }
 
-  // 列表卡片滚动渐显（带一点点错峰）
+  /* ---------- 4. 列表卡片滚动渐显 ---------- */
   var items = document.querySelectorAll('.post-entry, .first-entry');
-  if (reduce || !('IntersectionObserver' in window)) return;
-  items.forEach(function (el, i) {
-    el.classList.add('reveal');
-    el.style.transitionDelay = Math.min(i, 5) * 60 + 'ms';
-  });
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) {
-      if (e.isIntersecting) {
-        e.target.classList.add('is-visible');
-        io.unobserve(e.target);
-      }
+  if (items.length && !reduce && 'IntersectionObserver' in window) {
+    items.forEach(function (el, i) {
+      el.classList.add('reveal');
+      el.style.transitionDelay = Math.min(i, 5) * 60 + 'ms';
     });
-  }, { rootMargin: '0px 0px 0px 0px', threshold: 0.01 });
-  items.forEach(function (el) { io.observe(el); });
-  // 兜底 1：已经在视口里的立刻显示（首屏不该等）
-  items.forEach(function (el) {
-    var r = el.getBoundingClientRect();
-    if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('is-visible');
-  });
-  // 兜底 2：观察器万一没触发（截图工具、老浏览器），2.5 秒后全部显示
-  setTimeout(function () {
-    items.forEach(function (el) { el.classList.add('is-visible'); });
-  }, 2500);
-})();
-</script>
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px', threshold: 0.01 });
+    items.forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('is-visible');
+      io.observe(el);
+    });
+    setTimeout(function () {
+      items.forEach(function (el) { el.classList.add('is-visible'); });
+    }, 2500);
+  }
 
-<script>
-(function () {
-  // 图片点击放大（自己写的轻量 lightbox，不引第三方库）
+  /* ---------- 5. 文章图片点击放大 ---------- */
   var imgs = document.querySelectorAll('.post-content img');
   if (imgs.length) {
     var box = null;
     var close = function () {
       if (!box) return;
-      var b = box;
-      box = null;
+      var b = box; box = null;
       b.classList.remove('open');
       document.body.style.overflow = '';
       setTimeout(function () { b.remove(); }, 200);
@@ -88,7 +187,7 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
   }
 
-  // 目录里高亮当前读到的小节
+  /* ---------- 6. 目录高亮当前小节 ---------- */
   var toc = document.getElementById('TableOfContents');
   if (toc && 'IntersectionObserver' in window) {
     var links = Array.prototype.slice.call(toc.querySelectorAll('a[href^="#"]'));
@@ -99,7 +198,7 @@
       if (h) { map[id] = a; heads.push(h); }
     });
     if (heads.length) {
-      var io = new IntersectionObserver(function (entries) {
+      var tio = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
           if (!en.isIntersecting) return;
           links.forEach(function (a) { a.classList.remove('active'); });
@@ -107,91 +206,8 @@
           if (a) a.classList.add('active');
         });
       }, { rootMargin: '-72px 0px -70% 0px', threshold: 0 });
-      heads.forEach(function (h) { io.observe(h); });
+      heads.forEach(function (h) { tio.observe(h); });
     }
   }
-})();
-</script>
-
-<script>
-(function () {
-  // 动态背景：三块缓慢漂移的光斑 + 淡淡的颗粒连线
-  if (!document.getElementById('bg-blobs')) {
-    var blobs = document.createElement('div');
-    blobs.id = 'bg-blobs';
-    blobs.innerHTML = '<i></i><i></i><i></i>';
-    document.body.insertBefore(blobs, document.body.firstChild);
-  }
-
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var canvas = document.createElement('canvas');
-  canvas.id = 'bg-canvas';
-  document.body.insertBefore(canvas, document.body.firstChild);
-  var ctx = canvas.getContext('2d');
-  var dpr = Math.min(2, window.devicePixelRatio || 1);
-  var W = 0, H = 0, parts = [], raf = null;
-
-  function palette() {
-    var dark = document.documentElement.dataset.theme === 'dark' ||
-      (!document.documentElement.dataset.theme &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches);
-    return dark ? '125,211,252,' : '14,116,144,';
-  }
-
-  function resize() {
-    W = canvas.width = Math.floor(window.innerWidth * dpr);
-    H = canvas.height = Math.floor(window.innerHeight * dpr);
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
-    var n = Math.round(Math.min(70, Math.max(22, window.innerWidth * window.innerHeight / 34000)));
-    parts = [];
-    for (var i = 0; i < n; i++) {
-      parts.push({
-        x: Math.random() * W, y: Math.random() * H,
-        vx: (Math.random() - .5) * .18 * dpr,
-        vy: (Math.random() - .5) * .18 * dpr,
-        r: (Math.random() * 1.1 + .5) * dpr
-      });
-    }
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    var col = palette(), maxD = 130 * dpr;
-    for (var i = 0; i < parts.length; i++) {
-      var p = parts[i];
-      if (!reduce) { p.x += p.vx; p.y += p.vy; }
-      if (p.x < -20) p.x = W + 20; else if (p.x > W + 20) p.x = -20;
-      if (p.y < -20) p.y = H + 20; else if (p.y > H + 20) p.y = -20;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, 6.28318);
-      ctx.fillStyle = 'rgba(' + col + '0.5)';
-      ctx.fill();
-      for (var j = i + 1; j < parts.length; j++) {
-        var q = parts[j], dx = p.x - q.x, dy = p.y - q.y, d = Math.sqrt(dx * dx + dy * dy);
-        if (d < maxD) {
-          ctx.strokeStyle = 'rgba(' + col + (0.15 * (1 - d / maxD)).toFixed(3) + ')';
-          ctx.lineWidth = 0.7 * dpr;
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(q.x, q.y);
-          ctx.stroke();
-        }
-      }
-    }
-  }
-
-  function loop() { draw(); raf = requestAnimationFrame(loop); }
-
-  resize();
-  if (reduce) { draw(); } else { loop(); }
-
-  window.addEventListener('resize', function () { resize(); if (reduce) draw(); });
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden) { if (raf) { cancelAnimationFrame(raf); raf = null; } }
-    else if (!reduce && !raf) { loop(); }
-  });
-  new MutationObserver(function () { if (reduce) draw(); })
-    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 })();
 </script>
