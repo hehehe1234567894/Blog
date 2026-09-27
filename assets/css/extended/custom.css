@@ -45,3 +45,79 @@ h3 {
 .first-entry .entry-content {
   margin: 12px 0;
 }
+
+/* ===== 动效（克制版；系统开启「减少动态效果」时自动关闭）===== */
+:root { --ease-out: cubic-bezier(.2, .7, .2, 1); }
+
+/* 列表项/首页卡片：进入视口时淡入上移 */
+.reveal { opacity: 0; transform: translateY(14px); }
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  transition: opacity .55s var(--ease-out), transform .55s var(--ease-out);
+}
+
+/* 卡片悬停：轻微抬起 + 阴影 */
+.post-entry {
+  transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out),
+    border-color .25s var(--ease-out);
+}
+.post-entry:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .09);
+  border-color: #b7b7b7;
+}
+.dark .post-entry:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+  border-color: #4a4a4a;
+}
+
+/* 顶部阅读进度条 */
+#reading-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px; width: 100%;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  z-index: 999;
+  transition: transform .08s linear;
+}
+
+/* 导航栏滚动后浮现模糊与阴影 */
+.header {
+  transition: box-shadow .25s var(--ease-out), background-color .25s var(--ease-out);
+}
+.header.is-scrolled {
+  box-shadow: 0 2px 14px rgba(0, 0, 0, .08);
+  backdrop-filter: saturate(180%) blur(8px);
+  -webkit-backdrop-filter: saturate(180%) blur(8px);
+}
+.dark .header.is-scrolled { box-shadow: 0 2px 16px rgba(0, 0, 0, .6); }
+
+/* 正文链接：下划线从左滑出 */
+.post-content a {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition: background-size .3s var(--ease-out);
+}
+.post-content a:hover { background-size: 100% 1px; }
+
+/* 文章标题、列表标题的渐入 */
+.post-single .post-header { animation: rise-in .5s var(--ease-out) both; }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 标签/按钮悬停 */
+.post-tags a, .entry-footer a, .paginav a { transition: color .2s var(--ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1 !important; transform: none !important; }
+  .post-entry, .post-entry:hover { transform: none !important; }
+  .post-single .post-header { animation: none !important; }
+  #reading-progress { display: none; }
+}
