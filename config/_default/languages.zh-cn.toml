@@ -1,0 +1,23 @@
+disabled = false
+locale = "zh-cn"
+label = "简体中文"
+weight = 1
+title = "MIEW"
+
+[params]
+  displayName = "中文"
+  isoCode = "zh-cn"
+  rtl = false
+  dateFormat = "2006 年 1 月 2 日"
+  description = "MIEW 的学习笔记：C 语言、单片机、硬件，还有踩过的坑。"
+  copyright = "© 2026 MIEW"
+
+[params.author]
+  name = "MIEW"
+  image = "img/author.png"
+  imageQuality = 96
+  headline = "C 语言 · 单片机 · 硬件"
+  bio = "在这里记录学习笔记和踩过的坑。"
+  links = [
+    { github = "https://github.com/hehehe1234567894" },
+  ]

@@ -1,16 +1,14 @@
 ---
 title: "关于"
-url: "/about/"
-summary: "关于我和这个博客"
-ShowToc: false
-ShowBreadCrumbs: true
-ShowReadingTime: false
-ShowWordCount: false
-hidemeta: true
-comments: false
+date: 2026-09-27
+showDate: false
+showAuthor: false
+showReadingTime: false
+showWordCount: false
+showTableOfContents: false
+showComments: false
+showPagination: false
 ---
-
-## 关于作者
 
 我是 **MIEW**。
 
