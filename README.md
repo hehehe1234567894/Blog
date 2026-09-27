@@ -1,4 +1,4 @@
-# 指针与烙铁 · 博客
+# 博客
 
 Hugo + PaperMod 的静态博客，用 **GitHub Actions 自动构建并发布到 GitHub Pages**。
 不用装 Node、不用装数据库，推一次代码就自动上线。
