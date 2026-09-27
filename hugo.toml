@@ -1,12 +1,12 @@
 # ─────────────────────────────────────────────────────────────
-#  Hugo 站点配置（指针与烙铁）
+#  Hugo 站点配置（MIEW）
 #  仓库建好后：把下面的 baseURL 改成你的实际地址，
 #   用户主页仓库  → https://<用户名>.github.io/
 #   普通项目仓库  → https://<用户名>.github.io/<仓库名>/
 #  （GitHub Actions 部署时会用 --baseURL 覆盖，所以先不改也能跑）
 # ─────────────────────────────────────────────────────────────
 baseURL = "https://hehehe1234567894.github.io/Blog/"
-title = "指针与烙铁"
+title = "MIEW"
 locale = "zh-cn"   # Hugo ≥0.158 用 locale 取代 languageCode
 defaultContentLanguage = "zh-cn"
 hasCJKLanguage = true
@@ -28,8 +28,8 @@ summaryLength = 80
 
 [params]
   env = "production"
-  description = "指针与烙铁的学习笔记：C 语言、单片机、硬件，还有踩过的坑。"
-  author = "指针与烙铁"
+  description = "MIEW 的学习笔记：C 语言、单片机、硬件，还有踩过的坑。"
+  author = "MIEW"
   DateFormat = "2006-01-02"
   defaultTheme = "auto"          # auto / light / dark
   disableThemeToggle = false
@@ -74,7 +74,7 @@ summaryLength = 80
     disableFingerprinting = false
 
   [params.homeInfoParams]
-    Title = "你好，我是指针与烙铁 👋"
+    Title = "你好，我是 MIEW 👋"
     Content = """
 一半时间在写 C 语言，一半时间在焊板子 —— 名字就是这么来的。
 
