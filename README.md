@@ -2,7 +2,7 @@
 
 Hugo + PaperMod 的静态博客，托管在 GitHub Pages。
 
-- 线上地址：<https://hehehe1234567894.github.io/Blog/>
+- 线上地址：<https://blog.funnycode.site/>（旧的 github.io 地址会自动跳过来）
 - 仓库：<https://github.com/hehehe1234567894/Blog>（源码在 `main`，发布的产物在 `gh-pages`）
 
 ## 写文章
