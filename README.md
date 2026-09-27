@@ -39,9 +39,8 @@ hugo --gc --minify      # 只构建，产物在 public/
 
 ## 建仓之后怎么上线（三步）
 
-1. **新建仓库**（网页上建，空仓库，不要勾 README）。
-   想要 `https://hehehe1234567894.github.io` 这种主页地址，仓库名必须是 `hehehe1234567894.github.io`；
-   叫别的名字（比如 `blog`）地址就是 `https://hehehe1234567894.github.io/blog/`。
+1. **仓库**：`hehehe1234567894/Blog`（已建好）。
+   地址：<https://hehehe1234567894.github.io/Blog/>
 
 2. **推送代码**（把 `<仓库地址>` 换成你的）：
 

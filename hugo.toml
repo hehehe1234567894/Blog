@@ -5,7 +5,7 @@
 #   普通项目仓库  → https://<用户名>.github.io/<仓库名>/
 #  （GitHub Actions 部署时会用 --baseURL 覆盖，所以先不改也能跑）
 # ─────────────────────────────────────────────────────────────
-baseURL = "https://hehehe1234567894.github.io/blog/"
+baseURL = "https://hehehe1234567894.github.io/Blog/"
 title = "指针与烙铁"
 locale = "zh-cn"   # Hugo ≥0.158 用 locale 取代 languageCode
 defaultContentLanguage = "zh-cn"
