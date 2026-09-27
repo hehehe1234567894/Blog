@@ -6,6 +6,11 @@ tags: ["建站", "Hugo", "GitHub Pages"]
 categories: ["折腾记录"]
 ShowToc: true
 draft: false
+cover:
+  image: "/images/covers/site.png"
+  alt: "建站教程封面"
+  relative: false
+  hiddenInSingle: true
 ---
 
 ## 一、为什么选这条路

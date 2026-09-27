@@ -27,6 +27,7 @@ summaryLength = 80
     unsafe = true
 
 [params]
+  images = ["https://blog.funnycode.site/og.png"]  # 分享到微信/QQ 时的预览图
   env = "production"
   description = "MIEW 的学习笔记：C 语言、单片机、硬件，还有踩过的坑。"
   author = "MIEW"

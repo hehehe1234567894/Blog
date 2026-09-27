@@ -7,6 +7,11 @@ categories: ["工具"]
 ShowToc: true
 TocOpen: false
 draft: false
+cover:
+  image: "/images/covers/git.png"
+  alt: "Git 教程封面"
+  relative: false
+  hiddenInSingle: true
 ---
 这篇分两部分：**先讲原理**（搞懂了原理，命令就不用背），**再给命令手册**（按场景查就行）。
 最后有一张「常见报错对照表」，收录了我自己踩过的坑。

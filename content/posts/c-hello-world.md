@@ -7,6 +7,11 @@ categories: ["C 语言"]
 ShowToc: true
 TocOpen: false
 draft: false
+cover:
+  image: "/images/covers/c.png"
+  alt: "C 语言环境配置封面"
+  relative: false
+  hiddenInSingle: true
 ---
 很多同学第一次学 C 语言，卡住的不是语法，而是**环境**：代码写完了，不知道按哪里才能跑起来。
 这篇就把这件事一次讲清楚——从装编译器到用 VS Code 写代码，全部走一遍。

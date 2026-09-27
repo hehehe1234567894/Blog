@@ -270,3 +270,26 @@ body::before {
 .post-content img { border-radius: 10px; }
 .post-content blockquote { border-radius: 0 10px 10px 0; }
 .post-content table { border-radius: 10px; overflow: hidden; }
+
+/* ===== 代码块：右上角复制按钮、右下角语言角标 ===== */
+.md-content .highlight,
+.post-content .highlight { position: relative; }
+.md-content pre,
+.post-content pre { padding: 14px 16px 22px !important; }
+.post-content .highlight code[data-lang]::after {
+  content: attr(data-lang);
+  position: absolute;
+  right: 12px; bottom: 6px;
+  font-size: .68rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .35;
+  pointer-events: none;
+}
+
+/* ===== 小屏幕：光斑和颗粒都收敛一点，省性能也更好看 ===== */
+@media (max-width: 720px) {
+  #bg-blobs i { filter: blur(38px); opacity: .34; }
+  #bg-canvas { opacity: .45; }
+  body::before { height: 34vh; }
+}
