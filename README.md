@@ -1,36 +1,32 @@
-# 博客
+# MIEW
 
-Hugo + PaperMod 的静态博客，托管在 GitHub Pages。
+我的博客：<https://blog.funnycode.site/>
 
-- 线上地址：<https://blog.funnycode.site/>（旧的 github.io 地址会自动跳过来）
-- 仓库：<https://github.com/hehehe1234567894/Blog>（源码在 `main`，发布的产物在 `gh-pages`）
+Hugo + PaperMod，托管在 GitHub Pages。往 `main` 分支提交就自动构建发布（GitHub Actions），
+评论用 Giscus（基于 GitHub Discussions）。
 
 ## 写文章
 
-新文章放进 `content/posts/`，Markdown 格式，开头写 front matter：
+在 `content/posts/` 里新建一个 `.md` 文件：
 
-```yaml
+```markdown
 ---
 title: "标题"
 date: 2026-09-27
 summary: "列表页显示的一句话"
 tags: ["C语言"]
-draft: false        # true = 草稿，不发布
+draft: false
 ---
+
+正文用 Markdown 写。
 ```
 
-## 发布
+## 目录
 
-在 dsh-home 上跑一条命令（自动构建并推送，约 1 分钟生效）：
+- `content/` —— 文章与页面（关于、归档、搜索）
+- `hugo.toml` —— 站点配置
+- `themes/PaperMod/` —— 主题（内置副本，不依赖 submodule）
+- `layouts/` —— 主题覆盖（评论区模板在这个目录）
+- `static/` —— favicon、CNAME 等原样输出的文件
 
-```bash
-bash /home/agent/DSH/sites/blog-tools/deploy.sh
-```
-
-## 评论
-
-用 Giscus（基于 GitHub Discussions），配置在 `hugo.toml` 的 `[params.giscus]`。
-
-## 其他
-
-本地预览、换自定义域名、升级主题这些细节，随时问 dsh-home。
+> `gh-pages` 分支是自动生成的，别直接改。
