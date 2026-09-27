@@ -1,0 +1,118 @@
+# ─────────────────────────────────────────────────────────────
+#  Hugo 站点配置（MIEW）
+#  仓库建好后：把下面的 baseURL 改成你的实际地址，
+#   用户主页仓库  → https://<用户名>.github.io/
+#   普通项目仓库  → https://<用户名>.github.io/<仓库名>/
+#  （GitHub Actions 部署时会用 --baseURL 覆盖，所以先不改也能跑）
+# ─────────────────────────────────────────────────────────────
+baseURL = "https://blog.funnycode.site/"
+title = "MIEW"
+locale = "zh-cn"   # Hugo ≥0.158 用 locale 取代 languageCode
+defaultContentLanguage = "zh-cn"
+hasCJKLanguage = true
+timeZone = "Asia/Shanghai"
+theme = "PaperMod"
+enableRobotsTXT = true
+enableEmoji = true
+paginate = 10
+summaryLength = 80
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[markup]
+  [markup.highlight]
+    noClasses = false
+  [markup.goldmark.renderer]
+    unsafe = true
+
+[params]
+  env = "production"
+  description = "MIEW 的学习笔记：C 语言、单片机、硬件，还有踩过的坑。"
+  author = "MIEW"
+  DateFormat = "2006-01-02"
+  defaultTheme = "auto"          # auto / light / dark
+  disableThemeToggle = false
+  mainSections = ["posts"]
+
+  ShowReadingTime = true
+  ShowWordCount = true
+  ShowShareButtons = false
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  ShowRssButtonInSectionTermList = true
+  ShowFullTextinRSS = true
+  ShowToc = true                 # 文章目录（可在单篇里覆盖）
+  TocOpen = false
+  hidemeta = false
+  hideSummary = false
+  disableSpecial1stPost = false
+  disableScrollToTop = false
+  comments = true                 # 打开评论区（由 layouts/_partials/comments.html 渲染）
+
+  # Giscus 评论：基于 GitHub Discussions
+  [params.giscus]
+    repo = "hehehe1234567894/Blog"
+    repoId = "R_kgDOUuJ_eg"
+    category = "Announcements"
+    categoryId = "DIC_kwDOUuJ_es4DGf-1"
+    mapping = "pathname"          # 一篇文章一个讨论帖
+    strict = "0"
+    reactionsEnabled = "1"
+    emitMetadata = "0"
+    inputPosition = "top"
+    theme = "preferred_color_scheme"
+    lang = "zh-CN"
+
+  [params.assets]
+    favicon = "favicon.ico"
+    favicon16x16 = "favicon-16x16.png"
+    favicon32x32 = "favicon-32x32.png"
+    apple_touch_icon = "apple-touch-icon.png"
+    disableHLJS = false          # 用 Hugo 自带高亮，不引 highlight.js
+    disableFingerprinting = false
+
+  [params.homeInfoParams]
+    Title = "你好，我是 MIEW 👋"
+    Content = """
+这里放我的学习笔记和踩过的坑：C 语言、单片机、硬件，以及各种折腾记录。
+"""
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/hehehe1234567894"
+
+  [[params.socialIcons]]
+    name = "rss"
+    url = "index.xml"
+
+  [params.fuseOpts]
+    isCaseSensitive = false
+    shouldSort = true
+    location = 0
+    distance = 1000
+    threshold = 0.4
+    minMatchCharLength = 1
+    keys = ["title", "permalink", "summary", "content"]
+
+[[menu.main]]
+  name = "文章"
+  url = "/posts/"
+  weight = 10
+[[menu.main]]
+  name = "归档"
+  url = "/archives/"
+  weight = 20
+[[menu.main]]
+  name = "标签"
+  url = "/tags/"
+  weight = 30
+[[menu.main]]
+  name = "搜索"
+  url = "/search/"
+  weight = 40
+[[menu.main]]
+  name = "关于"
+  url = "/about/"
+  weight = 50
