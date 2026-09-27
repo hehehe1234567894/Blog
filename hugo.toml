@@ -76,8 +76,6 @@ summaryLength = 80
   [params.homeInfoParams]
     Title = "你好，我是 MIEW 👋"
     Content = """
-一半时间在写 C 语言，一半时间在焊板子 —— 名字就是这么来的。
-
 这里放我的学习笔记和踩过的坑：C 语言、单片机、硬件，以及各种折腾记录。
 """
 
