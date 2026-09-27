@@ -12,3 +12,6 @@ Thumbs.db
 
 # 本地草稿
 .hugo_drafts/
+
+# 由 dsh-home 保管的 Actions 工作流（等 token 有 Workflows 权限 / 或网页粘贴）
+# .github/workflows/hugo.yml 内容见 ../blog-tools/hugo-workflow.yml
