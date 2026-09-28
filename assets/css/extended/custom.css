@@ -518,3 +518,10 @@ html:not([data-theme="dark"]) .cc-head.cc-head-in { color: #db2777; }
   #cc-girl { animation: none; }
   .cc-img-fade { opacity: 1; transform: none; filter: none; }
 }
+
+/* 樱花画布：必须固定定位，否则会占满一屏把内容挤下去 */
+#cc-sakura {
+  position: fixed; inset: 0; z-index: -1;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
