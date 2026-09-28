@@ -525,3 +525,50 @@ html:not([data-theme="dark"]) .cc-head.cc-head-in { color: #db2777; }
   width: 100%; height: 100%;
   pointer-events: none;
 }
+
+/* ---------- 12. 宽屏改横排（手机不动） ---------- */
+@media (min-width: 1080px) {
+  /* ① 首页 hero 横向：左边文字（标题/标语/简介/图标），右边三张数据卡 */
+  .home-info.cc-home-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(240px, .85fr);
+    column-gap: 32px;
+    align-items: center;
+    text-align: left;
+    padding: 1.4rem .4rem .8rem;
+  }
+  .home-info.cc-home-hero .entry-header { grid-column: 1; grid-row: 1; }
+  .home-info.cc-home-hero .entry-content { grid-column: 1; grid-row: 2; }
+  .home-info.cc-home-hero .entry-footer { grid-column: 1; grid-row: 3; }
+  .home-info.cc-home-hero .entry-header,
+  .home-info.cc-home-hero .entry-content,
+  .home-info.cc-home-hero .entry-footer { text-align: left; }
+  .home-info.cc-home-hero .social-icons { justify-content: flex-start; }
+  .home-info.cc-home-hero .cc-bento {
+    grid-column: 2; grid-row: 1 / span 3;
+    align-self: center; margin: 0; max-width: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* ② 文章列表两列并排 */
+  .main {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 22px;
+    row-gap: 4px;
+    align-items: start;
+  }
+  .main > .first-entry,
+  .main > .home-info,
+  .main > .paginav,
+  .main > footer,
+  .main > nav { grid-column: 1 / -1; }
+  /* 两列时卡片高度对齐 */
+  .main > .post-entry { height: 100%; }
+  .main > .post-entry .entry-cover img { width: 100%; }
+}
+
+/* 超宽屏再排三列，卡片不至于太宽 */
+@media (min-width: 1500px) {
+  .main { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
