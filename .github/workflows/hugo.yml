@@ -1,6 +1,6 @@
 name: Build and publish
 
-# 推送到 main 就自动构建，并把产物推到 gh-pages（GitHub Pages 的发布分支）
+# 推送到 main 就自动构建，并把产物推到 gh-pages（GitHub Pages 的发布分支） ！
 on:
   push:
     branches: [main]

@@ -1,4 +1,4 @@
-{{- /* 文章底部：相关文章（按共同标签，找不到就退化为其它最新文章） */ -}}
+{{- /* 文章底部：相关文章 （按共同标签，找不到就退化为其它最新文章） */ -}}
 {{- $cur := . -}}
 {{- $others := where (where site.RegularPages "Section" "posts") "Permalink" "ne" $cur.Permalink -}}
 {{- $hits := slice -}}
