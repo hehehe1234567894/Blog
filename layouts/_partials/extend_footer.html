@@ -515,7 +515,28 @@
   if (info) {
     info.classList.add('cc-home-hero');
     var title = info.querySelector('.entry-header h1');
-    if (title) title.classList.add('cc-hero-title');
+    if (title) {
+      title.classList.add('cc-hero-title');
+      // 把非 emoji 的文字包进 <span class="grad">，这样渐变字不会把 👋 染成半透明
+      try {
+        var raw = title.textContent;
+        var parts = raw.split(/(\p{Extended_Pictographic}[\u{FE0F}\u{200D}\p{Extended_Pictographic}]*)/u);
+        if (parts.length > 1) {
+          title.textContent = '';
+          parts.forEach(function (seg) {
+            if (!seg) return;
+            if (/\p{Extended_Pictographic}/u.test(seg)) {
+              title.appendChild(document.createTextNode(seg));
+            } else {
+              var sp = document.createElement('span');
+              sp.className = 'grad';
+              sp.textContent = seg;
+              title.appendChild(sp);
+            }
+          });
+        }
+      } catch (err) { /* 旧浏览器不支持就保持原样 */ }
+    }
     var content = info.querySelector('.entry-content');
     if (content) content.classList.add('cc-sub');
     var c = window.__CC_COUNTS;
