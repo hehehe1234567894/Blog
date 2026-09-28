@@ -1,0 +1,39 @@
+{{- /* 覆盖 PaperMod 的封面局部模板：文章没写 cover.image 时，自动按标题生成一张 SVG 封面
+       （这样新写的文章不用手动配图，也不会出现“有卡片没图”的空档） */ -}}
+{{- with .cxt -}}
+  {{- $isHidden := .Params.cover.hidden | default (cond $.IsSingle (.Params.cover.hiddenInSingle) (.Params.cover.hiddenInList)) | default false -}}
+  {{- $img := .Params.cover.image -}}
+  {{- $auto := "" -}}
+  {{- if and (not $img) (not $isHidden) (not $.IsSingle) (eq .Section "posts") -}}
+    {{- $title := .Title -}}
+    {{- $tags := .Params.tags | default slice -}}
+    {{- /* 按标题长度+标签数选一套配色 */ -}}
+    {{- $pals := slice
+        (slice "#0a2540" "#1d4ed8" "#67e8f9")
+        (slice "#2a1040" "#7c3aed" "#f0abfc")
+        (slice "#0d2b22" "#047857" "#6ee7b7")
+        (slice "#3a1a10" "#c2410c" "#fdba74")
+        (slice "#1b1b3a" "#4338ca" "#a5b4fc")
+        (slice "#2b1030" "#be185d" "#f9a8d4") -}}
+    {{- $i := mod (add (len $title) (mul 7 (len $tags))) 6 -}}
+    {{- $pal := index $pals $i -}}
+    {{- $chars := split $title "" -}}
+    {{- $l1 := delimit (first 11 $chars) "" -}}
+    {{- $l2 := "" -}}
+    {{- if gt (len $chars) 11 -}}{{- $l2 = delimit (first 11 (after 11 $chars)) "" -}}{{- end -}}
+    {{- $sub := delimit $tags " · " -}}
+    {{- if not $sub -}}{{- $sub = .Date.Format "2006-01-02" -}}{{- end -}}
+    {{- $svg := printf `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%s"/><stop offset="0.62" stop-color="%s"/></linearGradient><radialGradient id="h" cx="0.82" cy="0.2" r="0.58"><stop offset="0" stop-color="%s" stop-opacity="0.55"/><stop offset="1" stop-color="%s" stop-opacity="0"/></radialGradient><pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse"><path d="M44 0H0V44" fill="none" stroke="#ffffff" stroke-opacity="0.055" stroke-width="1"/></pattern></defs><rect width="1200" height="630" fill="url(#g)"/><rect width="1200" height="630" fill="url(#h)"/><rect width="1200" height="630" fill="url(#grid)"/><text x="88" y="128" font-size="30" font-weight="700" letter-spacing="6" fill="#ffffff" fill-opacity="0.72" font-family="system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif">MIEW</text><rect x="88" y="154" width="64" height="4" rx="2" fill="%s" fill-opacity="0.9"/><text x="88" y="268" font-size="60" font-weight="700" fill="#ffffff" font-family="system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif">%s</text><text x="88" y="352" font-size="42" font-weight="700" fill="#ffffff" fill-opacity="0.86" font-family="system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif">%s</text><text x="88" y="562" font-size="27" fill="#ffffff" fill-opacity="0.68" font-family="system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif">%s</text></svg>`
+        (index $pal 0) (index $pal 1) (index $pal 2) (index $pal 2) (index $pal 2) $l1 $l2 $sub -}}
+    {{- $name := printf "covers/auto-%s.svg" (.File.BaseFileName | default (urlize .Title)) -}}
+    {{- with resources.FromString $name $svg -}}
+      {{- $auto = .RelPermalink -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $src := $img | default $auto -}}
+  {{- if $src -}}
+<figure class="entry-cover{{ if .Params.cover.hiddenInSingle }} cover-hidden-single{{ end }}">
+    <img loading="{{ cond $.IsSingle "eager" "lazy" }}" src="{{ $src | absURL }}" alt="{{ .Params.cover.alt | default .Title }}">
+</figure>
+  {{- end -}}
+{{- end -}}
