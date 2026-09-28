@@ -101,6 +101,8 @@
       });
     }
     targets = tparts;
+    // 便于排查：把粒子数量写进 body 属性（不影响显示）
+    try { document.body.setAttribute('data-bg-particles', field.length + '/' + tparts.length); } catch (e) {}
   }
 
   function scatter() {
