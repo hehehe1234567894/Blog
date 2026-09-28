@@ -1,14 +1,5 @@
 {{- /* 背景光斑（纯 CSS 动画，不依赖 JS） */ -}}
 <div id="bg-blobs" aria-hidden="true"><i></i><i></i><i></i></div>
-<div id="home-avatar" aria-hidden="true">
-  <span class="avatar-ring"></span>
-  <span class="avatar">
-    <svg viewBox="0 0 32 32" width="34" height="34">
-      <path d="M7 3.2 L7 25.6 L12.8 19.8 L17 30.1 L21.1 28.2 L17 18.2 L24.3 17.6 Z"
-            fill="currentColor"/>
-    </svg>
-  </span>
-</div>
 <div id="home-typing" aria-hidden="true"><span class="t-text"></span><span class="t-caret"></span></div>
 <div id="scroll-ring" aria-hidden="true">
   <svg viewBox="0 0 46 46" width="46" height="46">
@@ -379,12 +370,7 @@
   /* ---------- 10. 首页：头像旋转环 + 循环打字机 ---------- */
   var homeInfo = document.querySelector('.home-info');
   if (homeInfo) {
-    var avatar = document.getElementById('home-avatar');
     var header = homeInfo.querySelector('.entry-header');
-    if (avatar && header) {
-      header.insertBefore(avatar, header.firstChild);
-      avatar.classList.add('show');
-    }
     var typingBox = document.getElementById('home-typing');
     if (typingBox && header) {
       header.parentNode.insertBefore(typingBox, header.nextSibling);
