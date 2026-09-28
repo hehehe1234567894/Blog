@@ -7,11 +7,6 @@ categories: ["Git"]
 ShowToc: true
 TocOpen: false
 draft: false
-cover:
-  image: "/images/covers/c.svg"
-  alt: "一次Git上遇到的问题"
-  relative: false
-  hiddenInSingle: true
 images: ["https://blog.funnycode.site/og.png"]   # 分享预览图（SVG 封面不能当缩略图）
 ---
 在使用Git时，我一般会先请教一下网络和AI。这一次也如此。但是我竟然出现了理解错误，导致文件始终无法提交部分。
