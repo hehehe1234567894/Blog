@@ -384,18 +384,28 @@
       if (Math.abs(mx - rx) > 0.4 || Math.abs(my - ry) > 0.4) { requestAnimationFrame(cLoop); }
       else { cGoing = false; }
     };
-    window.addEventListener('pointermove', function (e) {
+    var onMove = function (e) {
       mx = e.clientX; my = e.clientY;
       cdot.style.transform = 'translate3d(' + mx + 'px,' + my + 'px,0)';
       if (!cStarted) { rx = mx; ry = my; cStarted = true; cdot.classList.add('on'); cring.classList.add('on'); }
       if (!cGoing) { cGoing = true; requestAnimationFrame(cLoop); }
-    }, { passive: true });
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('mousemove', onMove, { passive: true });
     document.addEventListener('pointerover', function (e) {
       var hot = e.target.closest ? e.target.closest('a, button, .post-entry, .post-tags a, #scroll-ring, .logo a, summary') : null;
       cring.classList.toggle('hot', !!hot);
       cdot.classList.toggle('hot', !!hot);
     });
     document.addEventListener('pointerleave', function () { cdot.classList.remove('on'); cring.classList.remove('on'); });
+    // 兜底：如果一直没收到指针事件（某些环境 pointer 事件不可用），就把自定义光标收掉，
+    // 也不要去动系统光标，免得用户干脆看不到鼠标
+    setTimeout(function () {
+      if (!cStarted) {
+        cdot.remove(); cring.remove();
+        document.documentElement.classList.remove('cursor-custom');
+      }
+    }, 2000);
   }
 
   /* ---------- 13. 「这份主题」的招牌交互 ---------- */
