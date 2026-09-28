@@ -372,9 +372,11 @@
   /* ---------- 10. 首页标题打字机 ---------- */
   var h1 = document.querySelector('.home-info .entry-header h1');
   if (h1 && !reduce) {
+    var originalHTML = h1.innerHTML;
     var text = h1.textContent.replace(/\s+/g, ' ').trim();
     if (text.length > 1 && text.length < 40) {
-      var chars = Array.prototype.slice.call(text);
+      // 注意：按码点切分（Array.from），用 slice 会把 emoji 的代理对劈开成乱码
+      var chars = Array.from(text);
       var caret = document.createElement('span');
       caret.className = 'type-caret';
       h1.textContent = '';
@@ -386,7 +388,7 @@
           idx++;
           setTimeout(typeNext, 62);
         } else {
-          setTimeout(function () { caret.remove(); }, 1800);
+          setTimeout(function () { h1.innerHTML = originalHTML; }, 1800);
         }
       };
       setTimeout(typeNext, 260);
