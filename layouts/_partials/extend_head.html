@@ -1,2 +1,9 @@
-{{- /* 主题扩展：跨页面转场（View Transitions API，浏览器不支持时自动忽略） */ -}}
+{{- /* 主题扩展：跨页面转场 + 给前端脚本用的站点统计 */ -}}
 <meta name="view-transition" content="same-origin">
+<script>
+  window.__CC_COUNTS = {
+    posts: {{ len (where site.RegularPages "Section" "posts") }},
+    tags: {{ len site.Taxonomies.tags }},
+    cats: {{ len site.Taxonomies.categories }}
+  };
+</script>

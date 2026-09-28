@@ -17,23 +17,23 @@ code, pre, kbd, samp { font-family: var(--font-mono-cjk); }
 .post-title, h1, h2, h3 { letter-spacing: .01em; }
 
 /* ---------- 2. 主题与动态背景 ---------- */
-:root { --accent-a: #7c3aed; --accent-b: #ec4899; }          /* 浅色：紫 → 粉 */
-html[data-theme="dark"] { --accent-a: #22d3ee; --accent-b: #a78bfa; }  /* 深色：青 → 紫 */
+:root { --accent-a: #a78bfa; --accent-b: #f472b6; }          /* 粉紫主色（按主人给的这份主题） */
+html[data-theme="dark"] { --accent-a: #f472b6; --accent-b: #a78bfa; }  /* 深色：粉 → 紫 */
 
 /* 浅色：接近白底，只留一点冷调 */
 html {
   background-color: var(--theme);
-  background-image: linear-gradient(168deg, #fdfcff 0%, #f7f9ff 45%, #f5fbfa 100%);
+  background-image: linear-gradient(168deg, #fff8fc 0%, #f7f2ff 45%, #fdf0f8 100%);
   background-attachment: fixed;
 }
 /* 深色：近黑底 + 四角极光，中间留黑保证可读性 */
 html[data-theme="dark"] {
-  background-color: #04060d;
+  background-color: #14101c;
   background-image:
-    radial-gradient(1100px 560px at 10% -16%, rgba(16, 185, 129, .13), transparent 60%),
-    radial-gradient(900px 520px at 94% -8%, rgba(34, 211, 238, .12), transparent 58%),
-    radial-gradient(1000px 600px at 50% 116%, rgba(139, 92, 246, .14), transparent 62%),
-    linear-gradient(170deg, #05070f 0%, #04060d 55%, #05070f 100%);
+    radial-gradient(1100px 560px at 10% -16%, rgba(167, 139, 250, .18), transparent 60%),
+    radial-gradient(900px 520px at 94% -8%, rgba(244, 114, 182, .16), transparent 58%),
+    radial-gradient(1000px 600px at 50% 116%, rgba(96, 165, 250, .14), transparent 62%),
+    linear-gradient(170deg, #16111f 0%, #14101c 55%, #191325 100%);
 }
 body, .list { background: transparent !important; }
 
@@ -42,28 +42,28 @@ body, .list { background: transparent !important; }
 
 /* 浅色：薄荷 / 天蓝 / 淡紫，很淡但一直在动 */
 #bg-blobs i:nth-child(1) {
-  width: 44vw; height: 44vw; left: -12vw; top: -16vw; opacity: .30;
-  background: radial-gradient(circle at 34% 34%, rgba(167, 243, 208, .95), transparent 70%);
+  width: 44vw; height: 44vw; left: -12vw; top: -16vw; opacity: .34;
+  background: radial-gradient(circle at 34% 34%, rgba(196, 181, 253, .95), transparent 70%);
   animation: drift-a 24s ease-in-out infinite alternate;
 }
 #bg-blobs i:nth-child(2) {
-  width: 38vw; height: 38vw; right: -12vw; top: -2vh; opacity: .30;
-  background: radial-gradient(circle at 60% 40%, rgba(186, 230, 253, .95), transparent 70%);
+  width: 38vw; height: 38vw; right: -12vw; top: -2vh; opacity: .32;
+  background: radial-gradient(circle at 60% 40%, rgba(249, 168, 212, .95), transparent 70%);
   animation: drift-b 30s ease-in-out infinite alternate;
 }
 #bg-blobs i:nth-child(3) {
-  width: 48vw; height: 48vw; left: 24vw; bottom: -30vw; opacity: .24;
-  background: radial-gradient(circle at 50% 50%, rgba(221, 214, 254, .95), transparent 72%);
+  width: 48vw; height: 48vw; left: 24vw; bottom: -30vw; opacity: .26;
+  background: radial-gradient(circle at 50% 50%, rgba(147, 197, 253, .95), transparent 72%);
   animation: drift-c 36s ease-in-out infinite alternate;
 }
 
 /* 深色：极光用 screen 混色，只有很淡的发光感 */
 html[data-theme="dark"] #bg-blobs i { mix-blend-mode: screen; filter: blur(110px); }
 html[data-theme="dark"] #bg-blobs i:nth-child(1) {
-  opacity: .30; background: radial-gradient(circle at 34% 34%, rgba(16, 185, 129, .85), transparent 70%);
+  opacity: .34; background: radial-gradient(circle at 34% 34%, rgba(167, 139, 250, .90), transparent 70%);
 }
 html[data-theme="dark"] #bg-blobs i:nth-child(2) {
-  opacity: .28; background: radial-gradient(circle at 60% 40%, rgba(34, 211, 238, .80), transparent 70%);
+  opacity: .32; background: radial-gradient(circle at 60% 40%, rgba(244, 114, 182, .85), transparent 70%);
 }
 html[data-theme="dark"] #bg-blobs i:nth-child(3) {
   opacity: .26; background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, .80), transparent 72%);
@@ -415,4 +415,106 @@ html[data-theme="dark"] #cursor-glow { mix-blend-mode: screen; }
 
 @media (prefers-reduced-motion: reduce) {
   #home-typing .t-caret { animation: none; }
+}
+
+/* ---------- 11. 「这份主题」的招牌部件（粉紫渐变 hero / 数据卡 / 看板娘 / 转场帘） ---------- */
+:root {
+  --cc-pink: #f472b6;
+  --cc-purple: #a78bfa;
+  --cc-blue: #60a5fa;
+  --cc-gradient: linear-gradient(90deg, #f472b6, #a78bfa, #60a5fa, #f472b6);
+  --cc-glow: rgba(244, 114, 182, .35);
+}
+
+/* 首页 hero：放大的渐变标题 + 打字机 + 社交图标 + 三张数据卡 */
+.cc-home-hero { text-align: center; padding: 1.2rem 0 .4rem; }
+.cc-home-hero .cc-hero-title {
+  font-size: 2.1rem; font-weight: 800; margin: 0 0 .4rem; line-height: 1.3;
+  background: var(--cc-gradient); background-size: 300%;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  animation: cc-gradient-slide 6s linear infinite;
+}
+@keyframes cc-gradient-slide { to { background-position: 300% 50%; } }
+.cc-home-hero .cc-sub { color: var(--secondary); font-size: .95rem; margin: .2rem 0 .6rem; }
+.cc-home-hero .social-icons { margin-top: .5rem; }
+.cc-bento {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .7rem; max-width: 520px; margin: 1.3rem auto 0;
+}
+.cc-bento-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .15rem; padding: .9rem .5rem; border-radius: 14px;
+  background: rgba(255, 255, 255, .55); border: 1px solid rgba(255, 255, 255, .6);
+  backdrop-filter: blur(12px) saturate(160%); -webkit-backdrop-filter: blur(12px) saturate(160%);
+  box-shadow: 0 6px 20px rgba(31, 31, 31, .06);
+  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1), box-shadow .35s ease, border-color .35s ease;
+}
+html[data-theme="dark"] .cc-bento-card {
+  background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .10);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .35);
+}
+.cc-bento-card:hover {
+  transform: translateY(-5px) scale(1.03);
+  border-color: color-mix(in srgb, var(--cc-pink) 55%, transparent);
+  box-shadow: 0 12px 32px rgba(244, 114, 182, .22);
+}
+.cc-bento-num {
+  font-size: 1.5rem; font-weight: 800; line-height: 1.1;
+  background: var(--cc-gradient); background-size: 300%;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  animation: cc-gradient-slide 5s linear infinite;
+}
+.cc-bento-label { font-size: .74rem; color: var(--secondary); }
+
+/* 看板娘 + 气泡 */
+#cc-girl {
+  position: fixed; right: 10px; bottom: -4px; width: 148px; height: auto; z-index: 996;
+  cursor: pointer; animation: cc-girl-float 3.8s ease-in-out infinite;
+  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+  filter: drop-shadow(0 6px 18px rgba(244, 114, 182, .35));
+  user-select: none;
+}
+#cc-girl:hover { transform: scale(1.06); }
+@keyframes cc-girl-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+#cc-girl-bubble {
+  position: fixed; right: 120px; bottom: 150px; max-width: 230px; z-index: 996;
+  padding: .7rem 1rem; border-radius: 14px 14px 4px 14px;
+  background: rgba(255, 255, 255, .95); color: #4a4458; font-size: .88rem; line-height: 1.5;
+  box-shadow: 0 8px 28px rgba(244, 114, 182, .28), 0 0 0 1px rgba(244, 114, 182, .25);
+  opacity: 0; transform: translateY(10px) scale(.92); transform-origin: bottom right;
+  transition: opacity .35s ease, transform .35s cubic-bezier(.34, 1.56, .64, 1);
+  pointer-events: none;
+}
+html[data-theme="dark"] #cc-girl-bubble { background: rgba(46, 46, 51, .96); color: #ececf1; }
+#cc-girl-bubble.show { opacity: 1; transform: none; }
+@media (max-width: 720px) { #cc-girl { width: 104px; opacity: .95; } #cc-girl-bubble { right: 84px; bottom: 120px; max-width: 190px; } }
+
+/* 页面切换的渐变帘子 */
+#cc-veil {
+  position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  background: linear-gradient(135deg, #1d1e20, #2a2438 45%, #3b2c44);
+  opacity: 1; transition: opacity .38s ease;
+}
+html:not([data-theme="dark"]) #cc-veil { background: linear-gradient(135deg, #fff5fb, #f3ecff 45%, #fde9f4); }
+#cc-veil.out { opacity: 0; }
+
+/* 文章小标题滑入时左侧出现渐变竖条 */
+.cc-head { position: relative; transition: color .45s ease, padding-left .45s cubic-bezier(.22, .61, .36, 1); }
+.cc-head::before {
+  content: ''; position: absolute; left: 0; top: .28em; width: 3px; height: 0;
+  border-radius: 3px; background: var(--cc-gradient);
+  transition: height .45s cubic-bezier(.22, .61, .36, 1);
+}
+.cc-head.cc-head-in { color: var(--cc-pink); padding-left: 14px; }
+.cc-head.cc-head-in::before { height: 1.1em; }
+html:not([data-theme="dark"]) .cc-head.cc-head-in { color: #db2777; }
+
+/* 图片渐显 */
+.cc-img-fade { opacity: 0; transform: scale(1.03); filter: blur(8px); transition: opacity .7s ease, transform .7s cubic-bezier(.22, .61, .36, 1), filter .7s ease; }
+.cc-img-fade.cc-in { opacity: 1; transform: none; filter: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-home-hero .cc-hero-title, .cc-bento-num { animation: none; }
+  #cc-girl { animation: none; }
+  .cc-img-fade { opacity: 1; transform: none; filter: none; }
 }

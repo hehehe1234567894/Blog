@@ -1,6 +1,12 @@
 {{- /* 背景光斑（纯 CSS 动画，不依赖 JS） */ -}}
 <div id="bg-blobs" aria-hidden="true"><i></i><i></i><i></i></div>
 <div id="home-typing" aria-hidden="true"><span class="t-text"></span><span class="t-caret"></span></div>
+<div id="cc-veil" class="out" aria-hidden="true"></div>
+{{- with resources.Get "img/kanban-girl.png" }}
+  {{- $g := .Resize "300x webp q80" }}
+<img id="cc-girl" src="{{ $g.RelPermalink }}" alt="看板娘" draggable="false">
+<div id="cc-girl-bubble" aria-hidden="true"></div>
+{{- end }}
 <div id="scroll-ring" aria-hidden="true">
   <svg viewBox="0 0 46 46" width="46" height="46">
     <defs>
@@ -439,6 +445,140 @@
       cdot.classList.toggle('hot', !!hot);
     });
     document.addEventListener('pointerleave', function () { cdot.classList.remove('on'); cring.classList.remove('on'); });
+  }
+
+  /* ---------- 13. 「这份主题」的招牌交互 ---------- */
+  var fine2 = window.matchMedia('(pointer: fine)').matches;
+
+  /* ① 页面切换帘子：点站内链接先盖上再走 */
+  var veil = document.getElementById('cc-veil');
+  if (veil && !reduce) {
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest ? e.target.closest('a') : null;
+      if (!a) return;
+      var href = a.getAttribute('href') || '';
+      if (!href || href.charAt(0) === '#' || a.target === '_blank') return;
+      if (a.host && a.host !== location.host) return;
+      e.preventDefault();
+      veil.classList.remove('out');
+      setTimeout(function () { location.href = a.href; }, 260);
+    });
+    window.addEventListener('pageshow', function () { requestAnimationFrame(function () { veil.classList.add('out'); }); });
+  }
+
+  /* ② 看板娘：点一下冒句台词 */
+  var girl = document.getElementById('cc-girl');
+  var bubble = document.getElementById('cc-girl-bubble');
+  if (girl && bubble) {
+    var talks = ['今天也要写代码呀～', 'C 语言作业交了没？', '记得 git push！', '有问题就点文章下面留言～', '摸鱼一时爽，一直摸鱼一直爽'];
+    var ti = 0, bt = null;
+    girl.addEventListener('click', function () {
+      bubble.textContent = talks[ti % talks.length];
+      ti++;
+      bubble.classList.add('show');
+      clearTimeout(bt);
+      bt = setTimeout(function () { bubble.classList.remove('show'); }, 3200);
+    });
+  }
+
+  /* ③ 文章小标题滑入时出渐变竖条 */
+  var heads = document.querySelectorAll('.post-content h2, .post-content h3');
+  if (heads.length && 'IntersectionObserver' in window) {
+    var hio = new IntersectionObserver(function (es) {
+      es.forEach(function (en) {
+        en.target.classList.toggle('cc-head-in', en.isIntersecting);
+        if (en.isIntersecting) en.target.classList.add('cc-head');
+      });
+    }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+    heads.forEach(function (h) { h.classList.add('cc-head'); hio.observe(h); });
+  }
+
+  /* ④ 图片渐显 */
+  document.querySelectorAll('.post-content img').forEach(function (im) {
+    im.classList.add('cc-img-fade');
+    if (im.complete) { im.classList.add('cc-in'); }
+    else { im.addEventListener('load', function () { im.classList.add('cc-in'); }); im.addEventListener('error', function () { im.classList.add('cc-in'); }); }
+  });
+
+  /* ⑤ 首页：套上 hero + 三张数据卡 */
+  var info = document.querySelector('.home-info');
+  if (info) {
+    info.classList.add('cc-home-hero');
+    var title = info.querySelector('.entry-header h1');
+    if (title) title.classList.add('cc-hero-title');
+    var content = info.querySelector('.entry-content');
+    if (content) content.classList.add('cc-sub');
+    var c = window.__CC_COUNTS;
+    if (c && !info.querySelector('.cc-bento')) {
+      var rows = [['posts', '篇文章'], ['tags', '个标签'], ['cats', '个分类']];
+      var box = document.createElement('div');
+      box.className = 'cc-bento';
+      rows.forEach(function (r) {
+        var card = document.createElement('div');
+        card.className = 'cc-bento-card';
+        var num = document.createElement('span');
+        num.className = 'cc-bento-num';
+        num.textContent = c[r[0]] || 0;
+        var lab = document.createElement('span');
+        lab.className = 'cc-bento-label';
+        lab.textContent = r[1];
+        card.appendChild(num); card.appendChild(lab); box.appendChild(card);
+      });
+      var host = info.querySelector('.entry-footer') || content || info;
+      host.parentNode.insertBefore(box, host.nextSibling);
+    }
+  }
+
+  /* ⑥ 粉色花瓣（这一份主题的樱花效果，淡一点） */
+  if (!reduce) {
+    var pc = document.createElement('canvas');
+    pc.id = 'cc-sakura';
+    document.body.insertBefore(pc, document.body.firstChild);
+    var px2 = pc.getContext('2d');
+    var pw = 0, ph = 0, petals = [], praf = null, ptick = 0;
+    var preset = function () {
+      pw = pc.width = window.innerWidth; ph = pc.height = window.innerHeight;
+      var n = Math.min(22, Math.floor(pw / 60));
+      petals = [];
+      for (var i = 0; i < n; i++) {
+        petals.push({
+          x: Math.random() * pw, y: Math.random() * ph,
+          r: Math.random() * 5 + 4, vy: Math.random() * .35 + .25,
+          ph2: Math.random() * 6.283, rot: Math.random() * 6.283,
+          vr: (Math.random() - .5) * .02, a: Math.random() * .18 + .12
+        });
+      }
+    };
+    var petalPath = function (x, y, r, rot) {
+      px2.save(); px2.translate(x, y); px2.rotate(rot);
+      px2.beginPath(); px2.moveTo(0, -r);
+      px2.bezierCurveTo(r * .95, -r * .55, r * .8, r * .6, 0, r);
+      px2.bezierCurveTo(-r * .8, r * .6, -r * .95, -r * .55, 0, -r);
+      px2.closePath(); px2.fill(); px2.restore();
+    };
+    var pdraw = function () {
+      ptick += .016;
+      px2.clearRect(0, 0, pw, ph);
+      for (var i = 0; i < petals.length; i++) {
+        var p = petals[i];
+        p.y += p.vy;
+        p.x += Math.sin(ptick * .8 + p.ph2) * .45;
+        p.rot += p.vr;
+        if (p.y - p.r > ph) { p.y = -p.r * 2; p.x = Math.random() * pw; }
+        px2.globalAlpha = p.a;
+        px2.fillStyle = '#f9a8d4';
+        petalPath(p.x, p.y, p.r, p.rot);
+        px2.globalAlpha = 1;
+      }
+    };
+    var ploop = function () { pdraw(); praf = requestAnimationFrame(ploop); };
+    preset();
+    ploop();
+    window.addEventListener('resize', preset);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { if (praf) { cancelAnimationFrame(praf); praf = null; } }
+      else if (!praf) { ploop(); }
+    });
   }
 })();
 </script>
