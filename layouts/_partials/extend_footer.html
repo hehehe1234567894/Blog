@@ -113,6 +113,16 @@
     }
   }
 
+  /* 初始状态：贴着目标位置稍微散开一点，这样第一帧就能看出是 MIEW，
+     再随着动画聚拢（避免动画被打断时只剩一堆乱点） */
+  function prime() {
+    for (var i = 0; i < tparts.length; i++) {
+      var p = tparts[i];
+      p.x = p.tx + (Math.random() - 0.5) * 150 * dpr;
+      p.y = p.ty + (Math.random() - 0.5) * 150 * dpr;
+    }
+  }
+
   function draw() {
     var ink = themeInk();
     ctx.clearRect(0, 0, W, H);
@@ -193,7 +203,8 @@
 
   function loop() { draw(); raf = requestAnimationFrame(loop); }
   resize();
-  if (reduce) { draw(); } else { scatter(); loop(); }
+  prime();
+  if (reduce) { draw(); } else { loop(); }
 
   if (!reduce && fine) {
     window.addEventListener('pointermove', function (e) {
