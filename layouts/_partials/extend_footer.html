@@ -94,10 +94,10 @@
     if (W < 860 * dpr) { tparts = []; targets = []; return; }
     var pts = makeTargets();
     var wide = W >= 860 * dpr;
-    var textW = Math.min(W * 0.30, 420 * dpr);
+    var textW = Math.min(W * 0.26, 380 * dpr);
     var textH = textW * 0.333;
-    var cx = wide ? W * 0.72 : W * 0.5;
-    var cy = wide ? H * 0.19 : H * 0.14;
+    var cx = wide ? W * 0.80 : W * 0.5;
+    var cy = wide ? H * 0.15 : H * 0.14;
     tparts = [];
     for (var k = 0; k < pts.length; k++) {
       var p = pts[k];
