@@ -77,8 +77,8 @@
       field.push({
         x: Math.random() * W, y: Math.random() * H, z: z,
         r: (0.5 + z * 1.4) * dpr,
-        vx: (Math.random() - .5) * .12 * dpr * z,
-        vy: (Math.random() - .5) * .12 * dpr * z,
+        vx: (Math.random() - .5) * .34 * dpr * z,
+        vy: (Math.random() - .5) * .34 * dpr * z,
         ph: Math.random() * 6.283
       });
     }
@@ -140,11 +140,14 @@
         a.y += a.vy + Math.cos(tick * 0.35 + a.ph) * 0.05 * dpr;
       }
       if (pointer.active) {
-        var dx = a.x - pointer.x, dy = a.y - pointer.y, d2 = dx * dx + dy * dy;
-        var R = 150 * dpr;
+        // 被鼠标轻轻吸引（参考码格模板的做法），靠太近时再轻轻推开一点
+        var dx = pointer.x - a.x, dy = pointer.y - a.y;
+        var R = 190 * dpr, d2 = dx * dx + dy * dy;
         if (d2 < R * R && d2 > 1) {
-          var d = Math.sqrt(d2), f = (1 - d / R) * 1.6;
-          a.x += (dx / d) * f; a.y += (dy / d) * f;
+          var d = Math.sqrt(d2), t2 = 1 - d / R;
+          var pull = t2 * t2 * 0.55;
+          a.x += (dx / d) * pull; a.y += (dy / d) * pull;
+          if (d < 46 * dpr) { a.x -= (dx / d) * 1.1; a.y -= (dy / d) * 1.1; }
         }
       }
       if (a.x < -30) a.x = W + 30; else if (a.x > W + 30) a.x = -30;
@@ -154,7 +157,21 @@
       ctx.fillStyle = 'rgba(' + ink.field + ',' + (dark ? 0.30 : 0.22) * a.z + ')';
       ctx.fill();
     }
-    var maxD = 120 * dpr;
+    // 先画“鼠标—粒子”的连线，形成星座感
+    if (pointer.active) {
+      var linkR = 190 * dpr;
+      for (var li = 0; li < field.length; li++) {
+        var lp = field[li];
+        var ldx = lp.x - pointer.x, ldy = lp.y - pointer.y;
+        var ld = Math.sqrt(ldx * ldx + ldy * ldy);
+        if (ld < linkR) {
+          ctx.strokeStyle = 'rgba(' + ink.field + ',' + (0.30 * (1 - ld / linkR)).toFixed(3) + ')';
+          ctx.lineWidth = 0.9 * dpr;
+          ctx.beginPath(); ctx.moveTo(lp.x, lp.y); ctx.lineTo(pointer.x, pointer.y); ctx.stroke();
+        }
+      }
+    }
+    var maxD = 130 * dpr;
     for (var m = 0; m < field.length; m++) {
       var p1 = field[m];
       for (var q = m + 1; q < field.length; q++) {
@@ -190,7 +207,7 @@
         var tdx = tp.x - pointer.x, tdy = tp.y - pointer.y, td2 = tdx * tdx + tdy * tdy;
         var TR = 130 * dpr;
         if (td2 < TR * TR && td2 > 1) {
-          var td = Math.sqrt(td2), tf = (1 - td / TR) * 4.2;
+          var td = Math.sqrt(td2), tf = (1 - td / TR) * 6.0;
           tp.x += (tdx / td) * tf; tp.y += (tdy / td) * tf;
         }
       }
@@ -251,27 +268,7 @@
     mark();
   }
 
-  /* ---------- 4. 列表卡片滚动渐显 ---------- */
-  var items = document.querySelectorAll('.post-entry, .first-entry');
-  if (items.length && !reduce && 'IntersectionObserver' in window) {
-    items.forEach(function (el, i) {
-      el.classList.add('reveal');
-      el.style.transitionDelay = Math.min(i, 5) * 60 + 'ms';
-    });
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
-      });
-    }, { rootMargin: '0px', threshold: 0.01 });
-    items.forEach(function (el) {
-      var r = el.getBoundingClientRect();
-      if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('is-visible');
-      io.observe(el);
-    });
-    setTimeout(function () {
-      items.forEach(function (el) { el.classList.add('is-visible'); });
-    }, 2500);
-  }
+  /* ---------- 4. 列表浮现交给 CSS 的 stagger 动画（见 custom.css），这里不再用 JS 控制 */
 
   /* ---------- 5. 文章图片点击放大 ---------- */
   var imgs = document.querySelectorAll('.post-content img');

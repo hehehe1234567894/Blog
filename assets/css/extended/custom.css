@@ -356,3 +356,43 @@ html[data-theme="dark"] #cursor-glow { mix-blend-mode: screen; }
   #cursor-dot, #cursor-ring { display: none; }
   .cursor-custom, .cursor-custom * { cursor: auto !important; }
 }
+
+/* ---------- 9. 动效增强（参考「码格」模板的手势） ---------- */
+/* 卡片扫光：鼠标划过时一道柔光扫过 */
+.post-entry::before {
+  content: ''; position: absolute; top: 0; left: -120%; width: 55%; height: 100%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-a) 14%, transparent), transparent);
+  transform: skewX(-18deg); pointer-events: none;
+  transition: left .75s cubic-bezier(.22, .8, .32, 1);
+}
+.post-entry:hover::before { left: 150%; }
+
+/* 列表依次浮现（纯 CSS，JS 没跑也照样能看到内容） */
+.post-entry, .first-entry { animation: entry-rise .6s cubic-bezier(.22, .8, .32, 1) both; }
+.post-entry:nth-child(1) { animation-delay: .04s; }
+.post-entry:nth-child(2) { animation-delay: .10s; }
+.post-entry:nth-child(3) { animation-delay: .16s; }
+.post-entry:nth-child(4) { animation-delay: .22s; }
+.post-entry:nth-child(5) { animation-delay: .28s; }
+.post-entry:nth-child(6) { animation-delay: .34s; }
+.post-entry:nth-child(n+7) { animation-delay: .40s; }
+@keyframes entry-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* 环形进度：渐变缓慢自转，看着更“活” */
+#scroll-ring svg { animation: ring-spin 9s linear infinite; }
+@keyframes ring-spin { to { transform: rotate(270deg); } }
+
+/* 文章正文的段落/标题依次浮现 */
+.post-single .post-content > * { animation: content-rise .5s cubic-bezier(.22, .8, .32, 1) both; }
+.post-single .post-content > *:nth-child(1) { animation-delay: .05s; }
+.post-single .post-content > *:nth-child(2) { animation-delay: .10s; }
+.post-single .post-content > *:nth-child(3) { animation-delay: .15s; }
+.post-single .post-content > *:nth-child(4) { animation-delay: .20s; }
+.post-single .post-content > *:nth-child(n+5) { animation-delay: .25s; }
+@keyframes content-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .post-entry, .first-entry, .post-single .post-content > * { animation: none !important; }
+  #scroll-ring svg { animation: none; }
+  .post-entry::before { display: none; }
+}
