@@ -90,8 +90,26 @@
       });
     }
 
-    // MIEW 粒子文字已去掉（以主人给的那份主题为准：只有环境粒子 + 花瓣）
-    tparts = []; targets = [];
+    // MIEW 粒子文字（窄屏直接留空，避免糊一屏）
+    if (W < 860 * dpr) { tparts = []; targets = []; return; }
+    var pts = makeTargets();
+    var wide = W >= 860 * dpr;
+    var textW = Math.min(W * 0.30, 420 * dpr);
+    var textH = textW * 0.333;
+    var cx = wide ? W * 0.72 : W * 0.5;
+    var cy = wide ? H * 0.19 : H * 0.14;
+    tparts = [];
+    for (var k = 0; k < pts.length; k++) {
+      var p = pts[k];
+      var tx = cx + (p[0] - 0.5) * textW;
+      var ty = cy + (p[1] - 0.5) * textH;
+      tparts.push({
+        x: Math.random() * W, y: Math.random() * H, tx: tx, ty: ty,
+        vx: 0, vy: 0, r: (Math.random() * 0.7 + 1.0) * dpr,
+        ph: Math.random() * 6.283,
+        c: Math.floor(Math.random() * 3)
+      });
+    }
     targets = tparts;
     // 便于排查：把粒子数量写进 body 属性（不影响显示）
     try { document.body.setAttribute('data-bg-particles', field.length + '/' + tparts.length); } catch (e) {}
@@ -176,6 +194,37 @@
       }
     }
 
+    // ② MIEW 粒子文字：聚拢 → 保持 → 鼠标拨开 / 滚动散开
+    var dissolved = window.scrollY > 140 || burst > 0;
+    for (var t = 0; t < tparts.length; t++) {
+      var tp = tparts[t];
+      var tx = tp.tx, ty = tp.ty;
+      if (dissolved) {
+        tx = tp.x + Math.sin(tick * 0.5 + tp.ph) * 30 * dpr;
+        ty = tp.y + Math.cos(tick * 0.45 + tp.ph) * 30 * dpr;
+      }
+      var ease = reduce ? 1 : (dissolved ? 0.012 : 0.055);
+      tp.x += (tx - tp.x) * ease;
+      tp.y += (ty - tp.y) * ease;
+      if (!dissolved) {
+        tp.x += Math.sin(tick * 0.9 + tp.ph) * 0.18 * dpr;
+        tp.y += Math.cos(tick * 0.8 + tp.ph) * 0.18 * dpr;
+      }
+      if (pointer.active) {
+        var tdx = tp.x - pointer.x, tdy = tp.y - pointer.y, td2 = tdx * tdx + tdy * tdy;
+        var TR = 130 * dpr;
+        if (td2 < TR * TR && td2 > 1) {
+          var td = Math.sqrt(td2), tf = (1 - td / TR) * 6.0;
+          tp.x += (tdx / td) * tf; tp.y += (tdy / td) * tf;
+        }
+      }
+      var near = Math.abs(tp.x - tp.tx) + Math.abs(tp.y - tp.ty);
+      var alpha = dissolved ? 0.14 : Math.max(0.12, 0.46 - near / (300 * dpr));
+      ctx.beginPath();
+      ctx.arc(tp.x, tp.y, tp.r, 0, 6.28318);
+      ctx.fillStyle = 'rgba(' + ink.text[tp.c] + ',' + alpha.toFixed(3) + ')';
+      ctx.fill();
+    }
     if (burst > 0) burst -= 1;
   }
 
