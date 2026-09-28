@@ -396,3 +396,41 @@ html[data-theme="dark"] #cursor-glow { mix-blend-mode: screen; }
   #scroll-ring svg { animation: none; }
   .post-entry::before { display: none; }
 }
+
+/* ---------- 10. 首页头像旋转环 + 循环打字机 ---------- */
+#home-avatar, #home-typing { display: none; }
+#home-avatar.show {
+  display: block; position: relative; width: 92px; height: 92px;
+  margin: 0 auto 14px;
+}
+#home-avatar .avatar-ring {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--accent-a), var(--accent-b), #38bdf8, var(--accent-a));
+  animation: avatar-spin 7s linear infinite;
+}
+#home-avatar .avatar {
+  position: absolute; inset: 4px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--theme); color: var(--accent-a);
+}
+@keyframes avatar-spin { to { transform: rotate(360deg); } }
+
+#home-typing.show {
+  display: block; text-align: center; min-height: 26px; margin: -4px 0 6px;
+  font-size: 15.5px; font-weight: 600; letter-spacing: .02em;
+  color: var(--accent-a);
+}
+#home-typing .t-caret {
+  display: inline-block; width: 2px; height: 1em; margin-left: 2px;
+  vertical-align: -2px; background: currentColor;
+  animation: caret-blink 1s steps(1) infinite;
+}
+/* 首页信息卡里的标题也跟着居中，配合头像 */
+.home-info .entry-header { text-align: center; }
+.home-info .entry-content { text-align: center; }
+.home-info .entry-footer { text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  #home-avatar .avatar-ring { animation: none; }
+  #home-typing .t-caret { animation: none; }
+}
