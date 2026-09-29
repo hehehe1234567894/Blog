@@ -11,7 +11,7 @@
   <svg viewBox="0 0 46 46" width="46" height="46">
     <defs>
       <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#22d3ee"/>
+        <stop offset="0" stop-color="#f472b6"/>
         <stop offset="1" stop-color="#a78bfa"/>
       </linearGradient>
     </defs>
@@ -20,7 +20,19 @@
   </svg>
   <span class="ring-arrow">↑</span>
 </div>
-{{- /* 主题扩展：二次元风动态背景（花瓣 + 星点）＋ 阅读进度 ＋ 滚动渐显 ＋ 图片放大 ＋ 目录高亮 */ -}}
+{{- /*
+  动效脚本 v2「编排版」
+  ---------------------------------------------------------------------------
+  v1 → v2 的关键改动：
+   · 粒子文字「MIEW」从右上角 80%/15%（压着导航与卡片）移到页面正中并放大，
+     滚动时优雅散成星尘 —— 首屏成为一件作品，而不是"页面上飘着一串糊字"。
+   · 樱花重做成三层深度粒子：远层小而慢、近层大而快、中层过渡，配合风场
+     正弦摆动，整片花瓣会成组飘移，不再是"贴纸"。
+   · 删除 #cursor-glow（520px 模糊光晕）—— 它只会让整屏发白。
+   · 转场帘子修复：只拦截「左键 + 无修饰键」的站内跳转，中键 / Ctrl / Cmd /
+     Shift / 右键"在新标签打开"全部放行（v1 把这些全废了）。
+   · 环形进度与看板娘错开位置（CSS 里已调整 bottom）。
+*/ -}}
 <script>
 (function () {
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -31,16 +43,15 @@
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   };
 
-  /* ---------- 1. 背景粒子场 + MIEW 粒子文字（参考 DeepSeek 官网 / MiMo 官网的粒子风） ---------- */
+  /* ---------- 1. 背景粒子场 + MIEW 粒子文字（居中放大，滚动散成星尘） ---------- */
   var canvas = document.createElement('canvas');
   canvas.id = 'bg-canvas';
   document.body.insertBefore(canvas, document.body.firstChild);
   var ctx = canvas.getContext('2d');
   var dpr = Math.min(2, window.devicePixelRatio || 1);
   var W = 0, H = 0, raf = null, tick = 0;
-  var isHome = !!document.querySelector('.home-info');
   var fine = window.matchMedia('(pointer: fine)').matches;
-  var field = [], tparts = [], targets = [], burst = 0;
+  var field = [], tparts = [], burst = 0;
   var pointer = { x: -9999, y: -9999, active: false };
 
   function themeInk() {
@@ -49,17 +60,27 @@
       : { field: '90,110,200', text: ['99,102,241', '139,92,246', '59,130,246'] };
   }
 
+  /* 只有首页 hero 区块的右侧「留白区」才适合放巨型粒子文字。
+     文章 / 归档 / 标签等页面主体是左对齐正文，粒子会直接压在字上；移动端更没有空间。
+     注意：.cc-bento 是后面才注入的，这里不能依赖它，只认 .home-info 这个服务端渲染的标记。
+     页面类型判定与视口宽度无关，可以在脚本解析阶段一次性算好；
+     真正的宽度门槛放在 resize() 里，因为这一刻 W 还是 0。 */
+  var isHomePage = (function () {
+    var m = document.querySelector('main');
+    return !!(m && m.querySelector('.home-info'));
+  })();
+
   /* 从离屏画布采样 "MIEW" 的字形点 */
   function makeTargets() {
-    var ow = 720, oh = 240, gap = 6;
+    var ow = 1000, oh = 320, gap = 5;
     var off = document.createElement('canvas');
     off.width = ow; off.height = oh;
     var o = off.getContext('2d');
     o.fillStyle = '#fff';
-    o.font = '700 156px system-ui, -apple-system, "Segoe UI", "PingFang SC", sans-serif';
+    o.font = '800 216px system-ui, -apple-system, "Segoe UI", "PingFang SC", sans-serif';
     o.textAlign = 'center';
     o.textBaseline = 'middle';
-    o.fillText('MIEW', ow / 2, oh / 2 + 6);
+    o.fillText('MIEW', ow / 2, oh / 2 + 8);
     var d = o.getImageData(0, 0, ow, oh).data;
     var pts = [];
     for (var y = 0; y < oh; y += gap) {
@@ -76,8 +97,8 @@
     canvas.style.width = window.innerWidth + 'px';
     canvas.style.height = window.innerHeight + 'px';
 
-    // 环境粒子（有深度感）
-    var n = Math.round(Math.min(110, Math.max(36, window.innerWidth * window.innerHeight / 16000)));
+    /* 环境粒子：数量下调到 45 上限，省电、也不抢戏 */
+    var n = Math.round(Math.min(45, Math.max(22, window.innerWidth * window.innerHeight / 38000)));
     field = [];
     for (var i = 0; i < n; i++) {
       var z = Math.random() * 0.8 + 0.2;
@@ -90,28 +111,42 @@
       });
     }
 
-    // MIEW 粒子文字（窄屏直接留空，避免糊一屏）
-    if (W < 860 * dpr) { tparts = []; targets = []; return; }
+    /* MIEW 粒子文字
+       v1：右上角（压导航）→ v2：正中央（压 hero + 数据卡）
+       v3：贴「内容列右侧的留白沟」。
+       关键认知：正文列 .main 是固定 720px 且居中的，所以真正空的不是内容列内部，
+       而是大屏下内容列左右两侧的边沟。把文字放进右边沟，就与标题、卡片彻底解耦。
+       只有边沟足够宽（>=180px）时才启用；否则宁可不显示，也不让它压到文字上。 */
+    if (!isHomePage) {
+      tparts = [];
+      try { document.body.setAttribute('data-bg-particles', field.length + '/0'); } catch (e) {}
+      return;
+    }
+    var lane = document.querySelector('.main') || document.querySelector('main');
+    var laneRight = lane ? lane.getBoundingClientRect().right * dpr : W;
+    var gutter = W - laneRight;                 /* 内容列右侧的空白宽度 */
+    if (gutter < 180 * dpr) {
+      tparts = [];
+      try { document.body.setAttribute('data-bg-particles', field.length + '/0'); } catch (e) {}
+      return;
+    }
     var pts = makeTargets();
-    var wide = W >= 860 * dpr;
-    var textW = Math.min(W * 0.26, 380 * dpr);
-    var textH = textW * 0.333;
-    var cx = wide ? W * 0.80 : W * 0.5;
-    var cy = wide ? H * 0.15 : H * 0.14;
+    var textW = Math.min(gutter * 0.82, 340 * dpr);
+    var textH = textW * 0.32;
+    var cx = laneRight + gutter * 0.5;          /* 居中于右边沟 */
+    var cy = H * 0.42;                          /* 对齐 hero 中部，与标题同一水平带 */
     tparts = [];
     for (var k = 0; k < pts.length; k++) {
       var p = pts[k];
-      var tx = cx + (p[0] - 0.5) * textW;
-      var ty = cy + (p[1] - 0.5) * textH;
       tparts.push({
-        x: Math.random() * W, y: Math.random() * H, tx: tx, ty: ty,
+        x: Math.random() * W, y: Math.random() * H,
+        tx: cx + (p[0] - 0.5) * textW,
+        ty: cy + (p[1] - 0.5) * textH,
         vx: 0, vy: 0, r: (Math.random() * 0.7 + 1.0) * dpr,
         ph: Math.random() * 6.283,
         c: Math.floor(Math.random() * 3)
       });
     }
-    targets = tparts;
-    // 便于排查：把粒子数量写进 body 属性（不影响显示）
     try { document.body.setAttribute('data-bg-particles', field.length + '/' + tparts.length); } catch (e) {}
   }
 
@@ -123,13 +158,12 @@
     }
   }
 
-  /* 初始状态：贴着目标位置稍微散开一点，这样第一帧就能看出是 MIEW，
-     再随着动画聚拢（避免动画被打断时只剩一堆乱点） */
+  /* 初始状态：贴着目标位置稍微散开，第一帧就能看出是 MIEW */
   function prime() {
     for (var i = 0; i < tparts.length; i++) {
       var p = tparts[i];
-      p.x = p.tx + (Math.random() - 0.5) * 8 * dpr;
-      p.y = p.ty + (Math.random() - 0.5) * 8 * dpr;
+      p.x = p.tx + (Math.random() - 0.5) * 10 * dpr;
+      p.y = p.ty + (Math.random() - 0.5) * 10 * dpr;
     }
   }
 
@@ -139,7 +173,7 @@
     tick += 0.016;
     var dark = themeDark();
 
-    // ① 环境粒子：缓慢漂移 + 近距离连线
+    /* 环境粒子：缓慢漂移 + 近距离连线 + 鼠标轻吸引 */
     for (var i = 0; i < field.length; i++) {
       var a = field[i];
       if (!reduce) {
@@ -147,7 +181,6 @@
         a.y += a.vy + Math.cos(tick * 0.35 + a.ph) * 0.05 * dpr;
       }
       if (pointer.active) {
-        // 被鼠标轻轻吸引（参考码格模板的做法），靠太近时再轻轻推开一点
         var dx = pointer.x - a.x, dy = pointer.y - a.y;
         var R = 190 * dpr, d2 = dx * dx + dy * dy;
         if (d2 < R * R && d2 > 1) {
@@ -164,7 +197,7 @@
       ctx.fillStyle = 'rgba(' + ink.field + ',' + (dark ? 0.30 : 0.22) * a.z + ')';
       ctx.fill();
     }
-    // 先画“鼠标—粒子”的连线，形成星座感
+    /* 鼠标—粒子连线（星座感） */
     if (pointer.active) {
       var linkR = 190 * dpr;
       for (var li = 0; li < field.length; li++) {
@@ -194,14 +227,14 @@
       }
     }
 
-    // ② MIEW 粒子文字：聚拢 → 保持 → 鼠标拨开 / 滚动散开
-    var dissolved = window.scrollY > 140 || burst > 0;
+    /* MIEW 粒子文字：聚拢 → 保持 → 鼠标拨开 / 滚动散成星尘 */
+    var dissolved = window.scrollY > 120 || burst > 0;
     for (var t = 0; t < tparts.length; t++) {
       var tp = tparts[t];
       var tx = tp.tx, ty = tp.ty;
       if (dissolved) {
-        tx = tp.x + Math.sin(tick * 0.5 + tp.ph) * 30 * dpr;
-        ty = tp.y + Math.cos(tick * 0.45 + tp.ph) * 30 * dpr;
+        tx = tp.x + Math.sin(tick * 0.5 + tp.ph) * 34 * dpr;
+        ty = tp.y + Math.cos(tick * 0.45 + tp.ph) * 34 * dpr;
       }
       var ease = reduce ? 1 : (dissolved ? 0.012 : 0.055);
       tp.x += (tx - tp.x) * ease;
@@ -219,7 +252,7 @@
         }
       }
       var near = Math.abs(tp.x - tp.tx) + Math.abs(tp.y - tp.ty);
-      var alpha = dissolved ? 0.14 : Math.max(0.12, 0.46 - near / (300 * dpr));
+      var alpha = dissolved ? 0.16 : Math.max(0.14, 0.5 - near / (300 * dpr));
       ctx.beginPath();
       ctx.arc(tp.x, tp.y, tp.r, 0, 6.28318);
       ctx.fillStyle = 'rgba(' + ink.text[tp.c] + ',' + alpha.toFixed(3) + ')';
@@ -238,7 +271,6 @@
       pointer.x = e.clientX * dpr; pointer.y = e.clientY * dpr; pointer.active = true;
     }, { passive: true });
     window.addEventListener('pointerleave', function () { pointer.active = false; });
-    // 点一下，粒子炸开再回来（一点点互动）
     window.addEventListener('pointerdown', function (e) {
       if (e.target.closest('a, button, input')) return;
       burst = 40; scatter();
@@ -275,9 +307,7 @@
     mark();
   }
 
-  /* ---------- 4. 列表浮现交给 CSS 的 stagger 动画（见 custom.css），这里不再用 JS 控制 */
-
-  /* ---------- 5. 文章图片点击放大 ---------- */
+  /* ---------- 4. 文章图片点击放大 ---------- */
   var imgs = document.querySelectorAll('.post-content img');
   if (imgs.length) {
     var box = null;
@@ -306,7 +336,7 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
   }
 
-  /* ---------- 6. 目录高亮当前小节 ---------- */
+  /* ---------- 5. 目录高亮当前小节 ---------- */
   var toc = document.getElementById('TableOfContents');
   if (toc && 'IntersectionObserver' in window) {
     var links = Array.prototype.slice.call(toc.querySelectorAll('a[href^="#"]'));
@@ -328,8 +358,9 @@
       heads.forEach(function (h) { tio.observe(h); });
     }
   }
-  /* ---------- 7. 卡片跟随鼠标的柔光 ---------- */
-  if (window.matchMedia('(pointer: fine)').matches) {
+
+  /* ---------- 6. 卡片跟随鼠标的柔光 ---------- */
+  if (fine) {
     document.querySelectorAll('.post-entry, .first-entry').forEach(function (card) {
       card.addEventListener('pointermove', function (e) {
         var r = card.getBoundingClientRect();
@@ -339,29 +370,7 @@
     });
   }
 
-  /* ---------- 8. 鼠标跟光 ---------- */
-  var glow = document.createElement('div');
-  glow.id = 'cursor-glow';
-  document.body.appendChild(glow);
-  if (!reduce && window.matchMedia('(pointer: fine)').matches) {
-    var gx = 0, gy = 0, tx = 0, ty = 0, glue = false, moved = false;
-    var loopGlow = function () {
-      gx += (tx - gx) * 0.14;
-      gy += (ty - gy) * 0.14;
-      glow.style.transform = 'translate3d(' + gx.toFixed(1) + 'px,' + gy.toFixed(1) + 'px,0)';
-      if (Math.abs(tx - gx) > 0.6 || Math.abs(ty - gy) > 0.6) { requestAnimationFrame(loopGlow); }
-      else { glue = false; }
-    };
-    document.addEventListener('pointermove', function (e) {
-      tx = e.clientX; ty = e.clientY;
-      if (!moved) { gx = tx; gy = ty; moved = true; }
-      glow.classList.add('on');
-      if (!glue) { glue = true; requestAnimationFrame(loopGlow); }
-    }, { passive: true });
-    document.addEventListener('pointerleave', function () { glow.classList.remove('on'); });
-  }
-
-  /* ---------- 9. 光斑随滚动视差 ---------- */
+  /* ---------- 7. 光斑随滚动视差 ---------- */
   var blobs = document.getElementById('bg-blobs');
   if (blobs && !reduce) {
     var lastY = -1;
@@ -373,13 +382,13 @@
     }, { passive: true });
   }
 
-  /* ---------- 10. 首页：头像旋转环 + 循环打字机 ---------- */
+  /* ---------- 8. 首页：循环打字机 ---------- */
   var homeInfo = document.querySelector('.home-info');
   if (homeInfo) {
-    var header = homeInfo.querySelector('.entry-header');
+    var hHeader = homeInfo.querySelector('.entry-header');
     var typingBox = document.getElementById('home-typing');
-    if (typingBox && header) {
-      header.parentNode.insertBefore(typingBox, header.nextSibling);
+    if (typingBox && hHeader) {
+      hHeader.parentNode.insertBefore(typingBox, hHeader.nextSibling);
       typingBox.classList.add('show');
       var lines = ['写 C 语言，也焊板子', '折腾单片机与硬件', '记录每一条踩过的坑'];
       var tText = typingBox.querySelector('.t-text');
@@ -402,7 +411,7 @@
     }
   }
 
-  /* ---------- 11. 环形进度 + 点击回顶部 ---------- */
+  /* ---------- 9. 环形进度 + 点击回顶部 ---------- */
   var ring = document.getElementById('scroll-ring');
   if (ring) {
     var fg = ring.querySelector('.ring-fg');
@@ -420,7 +429,8 @@
     });
   }
 
-  /* ---------- 12. 自定义光标：点 + 拖尾的环 ---------- */
+  /* ---------- 10. 自定义光标：v1 有四套，这里只保留「双速跟随环」 ---------- */
+  /* v1 还同时跑了 #cursor-glow（520px 模糊光晕），让整屏发白，已移除。 */
   if (fine && !reduce) {
     document.documentElement.classList.add('cursor-custom');
     var cdot = document.createElement('div'); cdot.id = 'cursor-dot';
@@ -447,8 +457,7 @@
       cdot.classList.toggle('hot', !!hot);
     });
     document.addEventListener('pointerleave', function () { cdot.classList.remove('on'); cring.classList.remove('on'); });
-    // 兜底：如果一直没收到指针事件（某些环境 pointer 事件不可用），就把自定义光标收掉，
-    // 也不要去动系统光标，免得用户干脆看不到鼠标
+    /* 兜底：一直没收到指针事件就把自定义光标收掉，并恢复系统箭头 */
     setTimeout(function () {
       if (!cStarted) {
         cdot.remove(); cring.remove();
@@ -457,17 +466,20 @@
     }, 2000);
   }
 
-  /* ---------- 13. 「这份主题」的招牌交互 ---------- */
-  var fine2 = window.matchMedia('(pointer: fine)').matches;
-
-  /* ① 页面切换帘子：点站内链接先盖上再走 */
+  /* ---------- 11. 页面切换帘子（修复 v1 拦截中键/Ctrl+点击的问题） ---------- */
   var veil = document.getElementById('cc-veil');
   if (veil && !reduce) {
     document.addEventListener('click', function (e) {
+      /* 只处理「无修饰键的左键单击」—— 中键、Ctrl/Cmd/Shift+点击、右键
+         一律放行，交给浏览器原生行为（新标签打开等）。 */
+      if (e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       var a = e.target.closest ? e.target.closest('a') : null;
       if (!a) return;
       var href = a.getAttribute('href') || '';
-      if (!href || href.charAt(0) === '#' || a.target === '_blank') return;
+      if (!href || href.charAt(0) === '#') return;
+      if (a.target && a.target !== '_self') return;
+      if (a.hasAttribute('download')) return;
       if (a.host && a.host !== location.host) return;
       e.preventDefault();
       veil.classList.remove('out');
@@ -476,7 +488,7 @@
     window.addEventListener('pageshow', function () { requestAnimationFrame(function () { veil.classList.add('out'); }); });
   }
 
-  /* ② 看板娘：点一下冒句台词 */
+  /* ---------- 12. 看板娘：点一下冒句台词 ---------- */
   var girl = document.getElementById('cc-girl');
   var bubble = document.getElementById('cc-girl-bubble');
   if (girl && bubble) {
@@ -491,33 +503,32 @@
     });
   }
 
-  /* ③ 文章小标题滑入时出渐变竖条 */
-  var heads = document.querySelectorAll('.post-content h2, .post-content h3');
-  if (heads.length && 'IntersectionObserver' in window) {
+  /* ---------- 13. 文章小标题滑入时出渐变竖条 ---------- */
+  var cHeads = document.querySelectorAll('.post-content h2, .post-content h3');
+  if (cHeads.length && 'IntersectionObserver' in window) {
     var hio = new IntersectionObserver(function (es) {
       es.forEach(function (en) {
         en.target.classList.toggle('cc-head-in', en.isIntersecting);
         if (en.isIntersecting) en.target.classList.add('cc-head');
       });
     }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
-    heads.forEach(function (h) { h.classList.add('cc-head'); hio.observe(h); });
+    cHeads.forEach(function (h) { h.classList.add('cc-head'); hio.observe(h); });
   }
 
-  /* ④ 图片渐显 */
+  /* ---------- 14. 图片渐显 ---------- */
   document.querySelectorAll('.post-content img').forEach(function (im) {
     im.classList.add('cc-img-fade');
     if (im.complete) { im.classList.add('cc-in'); }
     else { im.addEventListener('load', function () { im.classList.add('cc-in'); }); im.addEventListener('error', function () { im.classList.add('cc-in'); }); }
   });
 
-  /* ⑤ 首页：套上 hero + 三张数据卡 */
+  /* ---------- 15. 首页：套上 hero + 三张数据卡 ---------- */
   var info = document.querySelector('.home-info');
   if (info) {
     info.classList.add('cc-home-hero');
     var title = info.querySelector('.entry-header h1');
     if (title) {
       title.classList.add('cc-hero-title');
-      // 把非 emoji 的文字包进 <span class="grad">，这样渐变字不会把 👋 染成半透明
       try {
         var raw = title.textContent;
         var parts = raw.split(/(\p{Extended_Pictographic}[\u{FE0F}\u{200D}\p{Extended_Pictographic}]*)/u);
@@ -542,8 +553,8 @@
     var c = window.__CC_COUNTS;
     if (c && !info.querySelector('.cc-bento')) {
       var rows = [['posts', '篇文章'], ['tags', '个标签'], ['cats', '个分类']];
-      var box = document.createElement('div');
-      box.className = 'cc-bento';
+      var bbox = document.createElement('div');
+      bbox.className = 'cc-bento';
       rows.forEach(function (r) {
         var card = document.createElement('div');
         card.className = 'cc-bento-card';
@@ -553,33 +564,45 @@
         var lab = document.createElement('span');
         lab.className = 'cc-bento-label';
         lab.textContent = r[1];
-        card.appendChild(num); card.appendChild(lab); box.appendChild(card);
+        card.appendChild(num); card.appendChild(lab); bbox.appendChild(card);
       });
       var host = info.querySelector('.entry-footer') || content || info;
-      host.parentNode.insertBefore(box, host.nextSibling);
+      host.parentNode.insertBefore(bbox, host.nextSibling);
     }
   }
 
-  /* ⑥ 粉色花瓣（这一份主题的樱花效果，淡一点） */
+  /* ---------- 16. 樱花：三层深度 + 风场摆动 ---------- */
   if (!reduce) {
     var pc = document.createElement('canvas');
     pc.id = 'cc-sakura';
     document.body.insertBefore(pc, document.body.firstChild);
     var px2 = pc.getContext('2d');
-    var pw = 0, ph = 0, petals = [], praf = null, ptick = 0;
+    var pw = 0, ph = 0, petals = [], praf = null, ptick = 0, windT = 0;
+
+    /* 三层：远层(z小)小而慢淡、近层(z大)大而快亮、中层过渡 */
     var preset = function () {
-      pw = pc.width = window.innerWidth; ph = pc.height = window.innerHeight;
-      var n = Math.min(22, Math.floor(pw / 60));
+      pw = pc.width = window.innerWidth;
+      ph = pc.height = window.innerHeight;
+      var n = Math.min(26, Math.max(10, Math.floor(pw / 52)));
       petals = [];
+      var dr = window.devicePixelRatio > 1 ? 1.6 : 1.2;
       for (var i = 0; i < n; i++) {
+        var z = Math.random();
         petals.push({
-          x: Math.random() * pw, y: Math.random() * ph,
-          r: Math.random() * 5 + 4, vy: Math.random() * .35 + .25,
-          ph2: Math.random() * 6.283, rot: Math.random() * 6.283,
-          vr: (Math.random() - .5) * .02, a: Math.random() * .18 + .12
+          x: Math.random() * pw,
+          y: Math.random() * ph,
+          z: z,
+          r: (3 + z * 5) * dr,
+          vy: 0.16 + z * 0.62,
+          sway: 0.25 + z * 0.6,
+          ph2: Math.random() * 6.283,
+          rot: Math.random() * 6.283,
+          vr: (Math.random() - .5) * (0.008 + z * 0.016),
+          a: 0.07 + z * 0.22
         });
       }
     };
+
     var petalPath = function (x, y, r, rot) {
       px2.save(); px2.translate(x, y); px2.rotate(rot);
       px2.beginPath(); px2.moveTo(0, -r);
@@ -587,15 +610,20 @@
       px2.bezierCurveTo(-r * .8, r * .6, -r * .95, -r * .55, 0, -r);
       px2.closePath(); px2.fill(); px2.restore();
     };
+
     var pdraw = function () {
       ptick += .016;
+      windT += .004;
+      /* 风场：一个缓慢的大周期，整片花瓣会成组朝同一方向飘 */
+      var wind = Math.sin(windT) * 0.55;
       px2.clearRect(0, 0, pw, ph);
       for (var i = 0; i < petals.length; i++) {
         var p = petals[i];
         p.y += p.vy;
-        p.x += Math.sin(ptick * .8 + p.ph2) * .45;
+        p.x += wind * p.z + Math.sin(ptick * .8 + p.ph2) * p.sway;
         p.rot += p.vr;
         if (p.y - p.r > ph) { p.y = -p.r * 2; p.x = Math.random() * pw; }
+        if (p.x < -40) p.x = pw + 40; else if (p.x > pw + 40) p.x = -40;
         px2.globalAlpha = p.a;
         px2.fillStyle = '#f9a8d4';
         petalPath(p.x, p.y, p.r, p.rot);

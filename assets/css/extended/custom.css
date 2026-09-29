@@ -1,24 +1,68 @@
 /* =========================================================================
-   MIEW的博客自定义样式（PaperMod 扩展）
-   结构：1 排版  2 主题与动态背景  3 卡片与按钮  4 阅读体验  5 动效  6 适配
+   MIEW 博客自定义样式（PaperMod 扩展）· v2「编排版」
+   -------------------------------------------------------------------------
+   这一版的核心改动不在「加了什么」，而在「统一与编排」：
+
+   1. 建立动效 token —— 全站动效共用同一套缓动曲线与时长，这是「顺滑感」
+      的真正来源。v1 的问题不是动效不够，而是三套缓动各走各的。
+   2. 卡片 hover 分层响应 —— 卡片 / 封面 / 标题 用三种不同速度错开，
+      产生景深。v1 是四个元素一起动，所以显得吵。
+   3. 修掉 v1 的实际 bug ——
+        · .post-entry 的 overflow:hidden 裁掉了 translateY 上浮
+        · cursor: none 从未生效，导致系统箭头与自定义光标并存
+   4. 光标 4 套收敛为 1 套 —— v1 同时跑了 dot + ring + glow + 系统箭头。
+   5. 配色收敛 —— v1 的环形进度用青紫、主色用粉紫，两套色系互不相干。
    ========================================================================= */
 
-/* ---------- 1. 排版 ---------- */
+/* ---------- 1. 动效 token（全站统一，改这里即可全局调速） ---------- */
+:root {
+  /* 缓动曲线：出场用 ease-out，可点元素用 spring */
+  --ease-out: cubic-bezier(.22, .8, .32, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-smooth: cubic-bezier(.4, 0, .2, 1);
+
+  /* 时长阶梯：越大的元素动得越慢，形成景深 */
+  --dur-fast: .18s;
+  --dur-base: .35s;
+  --dur-slow: .7s;
+}
+
+/* ---------- 2. 排版 ---------- */
 :root {
   --font-cjk: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
   --font-mono-cjk: "JetBrains Mono", "Cascadia Code", Menlo, Consolas,
     "Sarasa Mono SC", monospace;
-  --ease-out: cubic-bezier(.2, .7, .2, 1);
 }
 body { font-family: var(--font-cjk); letter-spacing: .01em; }
 code, pre, kbd, samp { font-family: var(--font-mono-cjk); }
 .post-content { line-height: 1.85; }
 .post-title, h1, h2, h3 { letter-spacing: .01em; }
 
-/* ---------- 2. 主题与动态背景 ---------- */
-:root { --accent-a: #a78bfa; --accent-b: #f472b6; }          /* 粉紫主色（按主人给的这份主题） */
-html[data-theme="dark"] { --accent-a: #f472b6; --accent-b: #a78bfa; }  /* 深色：粉 → 紫 */
+/* 文章标题对比度修复
+   PaperMod 上游没有给 .post-title 指定颜色，它继承到的是 --secondary（灰）
+   也就是和面包屑、日期同一个值，导致正文标题看起来像辅助文字。
+   阅读起点本该最重，这里显式提回主文本色并加一点字重。 */
+.post-single .post-title,
+.page-header .post-title {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+/* ---------- 3. 配色系统（单一来源，全站引用） ---------- */
+:root {
+  --accent-a: #a78bfa;   /* 紫 —— 浅色模式主色 */
+  --accent-b: #f472b6;   /* 粉 —— 浅色模式辅色 */
+  --cc-pink: #f472b6;
+  --cc-purple: #a78bfa;
+  --cc-blue: #60a5fa;
+  --cc-gradient: linear-gradient(90deg, #f472b6, #a78bfa, #60a5fa, #f472b6);
+  --cc-glow: rgba(244, 114, 182, .35);
+}
+html[data-theme="dark"] {
+  --accent-a: #f472b6;   /* 深色模式反转：粉为主 */
+  --accent-b: #a78bfa;
+}
 
 /* 浅色：接近白底，只留一点冷调 */
 html {
@@ -26,7 +70,7 @@ html {
   background-image: linear-gradient(168deg, #fff8fc 0%, #f7f2ff 45%, #fdf0f8 100%);
   background-attachment: fixed;
 }
-/* 深色：近黑底 + 四角极光，中间留黑保证可读性 */
+/* 深色：近黑底 + 四角极光 */
 html[data-theme="dark"] {
   background-color: #14101c;
   background-image:
@@ -37,10 +81,10 @@ html[data-theme="dark"] {
 }
 body, .list { background: transparent !important; }
 
+/* ---------- 4. 背景光斑（3 个漂移光球） ---------- */
 #bg-blobs { position: fixed; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; }
 #bg-blobs i { position: absolute; display: block; border-radius: 50%; filter: blur(96px); will-change: transform; }
 
-/* 浅色：薄荷 / 天蓝 / 淡紫，很淡但一直在动 */
 #bg-blobs i:nth-child(1) {
   width: 44vw; height: 44vw; left: -12vw; top: -16vw; opacity: .34;
   background: radial-gradient(circle at 34% 34%, rgba(196, 181, 253, .95), transparent 70%);
@@ -57,7 +101,7 @@ body, .list { background: transparent !important; }
   animation: drift-c 36s ease-in-out infinite alternate;
 }
 
-/* 深色：极光用 screen 混色，只有很淡的发光感 */
+/* 深色：极光用 screen 混色 */
 html[data-theme="dark"] #bg-blobs i { mix-blend-mode: screen; filter: blur(110px); }
 html[data-theme="dark"] #bg-blobs i:nth-child(1) {
   opacity: .34; background: radial-gradient(circle at 34% 34%, rgba(167, 139, 250, .90), transparent 70%);
@@ -73,10 +117,18 @@ html[data-theme="dark"] #bg-blobs i:nth-child(3) {
 @keyframes drift-b { from { transform: translate3d(0, 0, 0) scale(1.06); } to { transform: translate3d(-8vw, 10vh, 0) scale(.94); } }
 @keyframes drift-c { from { transform: translate3d(0, 0, 0) scale(.96); } to { transform: translate3d(6vw, -8vh, 0) scale(1.1); } }
 
-/* 星野微尘 / 浮尘 */
+/* 粒子画布 / 樱花画布：都必须固定定位，否则会占满一屏把内容挤下去 */
 #bg-canvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .9; }
+#cc-sakura {
+  position: fixed; inset: 0; z-index: -1;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+/* 预留给将来的独立图层（当前脚本仍用上面两个 id） */
+#bg-particles { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+#cc-petals { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
 
-/* 顶部一点柔光，让标题区透气 */
+/* 顶部柔光，让标题区透气 */
 body::before {
   content: ''; position: fixed; left: 0; right: 0; top: 0; height: 44vh;
   z-index: -1; pointer-events: none;
@@ -86,61 +138,85 @@ html[data-theme="dark"] body::before {
   background: radial-gradient(56% 78% at 50% 0%, rgba(125, 211, 252, .09), transparent 72%);
 }
 
-/* ---------- 3. 卡片与按钮 ---------- */
-/* 玻璃卡片 */
+/* ---------- 5. 卡片：玻璃质感 + 分层 hover ---------- */
+/* 注意：v1 这里用 overflow:hidden，会把 hover 的 translateY(-4px) 裁掉一半。
+   改回 visible，同时用 border-radius 保持圆角干净。 */
 .post-entry {
   background: rgba(255, 255, 255, .72) !important;
   backdrop-filter: saturate(150%) blur(10px);
   -webkit-backdrop-filter: saturate(150%) blur(10px);
   border: 1px solid rgba(15, 23, 42, .07) !important;
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 28px rgba(15, 23, 42, .05) !important;
-  position: relative; overflow: hidden;
-  transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out),
-    border-color .25s var(--ease-out);
+  position: relative;
+  overflow: visible;              /* ← 关键修复：允许 hover 上浮不被裁切 */
+  transition: transform var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out);
 }
 html[data-theme="dark"] .post-entry {
   background: rgba(255, 255, 255, .045) !important;
   border-color: rgba(255, 255, 255, .09) !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px rgba(0, 0, 0, .35) !important;
 }
-/* 鼠标位置的柔光（CSS-Inspiration 里常见的 spotlight 手法） */
+
+/* 鼠标位置柔光（spotlight）：保留，这是最有效的一层 */
 .post-entry::after {
   content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  opacity: 0; transition: opacity .35s var(--ease-out);
+  opacity: 0; transition: opacity var(--dur-slow) var(--ease-out);
   background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%),
     color-mix(in srgb, var(--accent-a) 20%, transparent), transparent 62%);
 }
 .post-entry:hover::after { opacity: 1; }
-.post-entry:hover {
-  transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--accent-a) 45%, transparent) !important;
-  box-shadow: 0 12px 34px rgba(15, 23, 42, .12) !important;
-}
-html[data-theme="dark"] .post-entry:hover { box-shadow: 0 14px 38px rgba(0, 0, 0, .55) !important; }
 
-/* 站点标题渐变字 */
+/* 分层响应 —— 卡片本体：中等速度 */
+.post-entry:hover {
+  transform: translateY(-6px);
+  border-color: color-mix(in srgb, var(--accent-a) 45%, transparent) !important;
+  box-shadow: 0 14px 38px rgba(15, 23, 42, .13) !important;
+}
+html[data-theme="dark"] .post-entry:hover { box-shadow: 0 16px 42px rgba(0, 0, 0, .58) !important; }
+
+/* 分层响应 —— 标题：最快，像被"带起来" */
+.post-entry .entry-header h2 {
+  transition: color var(--dur-fast) var(--ease-out),
+              transform var(--dur-base) var(--ease-out);
+}
+.post-entry:hover .entry-header h2 {
+  color: var(--accent-a);
+  transform: translateX(4px);
+}
+
+/* 分层响应 —— 封面：最慢，形成景深 */
+.post-entry .entry-cover { overflow: hidden; border-radius: 8px; }
+.post-entry .entry-cover img {
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.post-entry:hover .entry-cover img { transform: scale(1.06); }
+
+/* ---------- 6. 站点标题渐变字 ---------- */
 .logo a {
   background: linear-gradient(96deg, var(--accent-a), var(--accent-b));
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* 药丸标签（ui-buttons 风格） */
+/* ---------- 7. 药丸标签 ---------- */
 .post-tags a {
   padding: 2px 10px; border: 1px solid var(--border); border-radius: 999px;
-  transition: color .2s var(--ease-out), border-color .2s var(--ease-out),
-    background-color .2s var(--ease-out), transform .2s var(--ease-out);
+  transition: color var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              background-color var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-spring);
 }
 .post-tags a:hover {
   color: var(--accent-a);
   border-color: color-mix(in srgb, var(--accent-a) 55%, transparent);
   background: color-mix(in srgb, var(--accent-a) 10%, transparent);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
-.paginav a, .entry-footer a { transition: color .2s var(--ease-out); }
 
-/* ---------- 4. 阅读体验 ---------- */
-/* 顶部阅读进度条 */
+/* ---------- 8. 阅读体验 ---------- */
+/* 顶部阅读进度条（跟随主色系） */
 #reading-progress {
   position: fixed; top: 0; left: 0; height: 3px; width: 100%;
   transform: scaleX(0); transform-origin: 0 50%;
@@ -148,7 +224,7 @@ html[data-theme="dark"] .post-entry:hover { box-shadow: 0 14px 38px rgba(0, 0, 0
   z-index: 999; transition: transform .08s linear;
 }
 /* 导航栏滚动后浮起 */
-.header { transition: box-shadow .25s var(--ease-out), background-color .25s var(--ease-out); }
+.header { transition: box-shadow var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out); }
 .header.is-scrolled {
   box-shadow: 0 2px 14px rgba(0, 0, 0, .08);
   backdrop-filter: saturate(180%) blur(8px);
@@ -156,9 +232,12 @@ html[data-theme="dark"] .post-entry:hover { box-shadow: 0 14px 38px rgba(0, 0, 0
 }
 html[data-theme="dark"] .header.is-scrolled { box-shadow: 0 2px 16px rgba(0, 0, 0, .6); }
 
-/* 次要文字加深一档 */
+/* 次要文字加深一档（日期 / 面包屑 / 摘要）
+   注意：不要写成无脑的 .entry-hint-parent —— PaperMod 的文章标题
+   <h1 class="post-title entry-hint-parent"> 也挂着这个 class，
+   一并命中就会把正文标题也染成灰色。这里用 :not(h1) 把它排除掉。 */
 html:not([data-theme="dark"]) .entry-hint,
-html:not([data-theme="dark"]) .entry-hint-parent,
+html:not([data-theme="dark"]) :not(h1):not(h2):not(h3).entry-hint-parent,
 html:not([data-theme="dark"]) .post-meta,
 html:not([data-theme="dark"]) .breadcrumbs { color: #59616d; }
 
@@ -166,7 +245,7 @@ html:not([data-theme="dark"]) .breadcrumbs { color: #59616d; }
 .post-content a {
   background-image: linear-gradient(currentColor, currentColor);
   background-repeat: no-repeat; background-position: 0 100%; background-size: 0% 1px;
-  transition: background-size .3s var(--ease-out), color .2s var(--ease-out);
+  transition: background-size var(--dur-base) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 .post-content a:hover { background-size: 100% 1px; color: var(--accent-a); }
 
@@ -191,7 +270,7 @@ html:not([data-theme="dark"]) .breadcrumbs { color: #59616d; }
 .post-content code { border-radius: 4px; }
 .post-content img {
   border-radius: 10px;
-  transition: transform .3s var(--ease-out), box-shadow .3s var(--ease-out);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
 }
 .post-content img:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0, 0, 0, .16); }
 
@@ -203,11 +282,11 @@ html:not([data-theme="dark"]) .breadcrumbs { color: #59616d; }
   transition: opacity .2s ease;
 }
 .lightbox.open { opacity: 1; }
-.lightbox img { max-width: 94vw; max-height: 92vh; border-radius: 10px; transform: scale(.96); transition: transform .25s var(--ease-out); }
+.lightbox img { max-width: 94vw; max-height: 92vh; border-radius: 10px; transform: scale(.96); transition: transform var(--dur-base) var(--ease-out); }
 .lightbox.open img { transform: scale(1); }
 
 /* 目录高亮 + 相关文章 */
-#TableOfContents a { display: inline-block; transition: color .2s var(--ease-out), transform .2s var(--ease-out); }
+#TableOfContents a { display: inline-block; transition: color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out); }
 #TableOfContents a:hover { transform: translateX(2px); }
 #TableOfContents a.active { color: var(--accent-a); font-weight: 600; }
 .related-posts { margin-top: 2.4rem; }
@@ -217,158 +296,16 @@ html:not([data-theme="dark"]) .breadcrumbs { color: #59616d; }
   display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
   padding: .5rem 0; border-bottom: 1px dashed var(--border);
 }
-.related-posts li a { display: inline-block; transition: transform .2s var(--ease-out); }
+.related-posts li a { display: inline-block; transition: transform var(--dur-fast) var(--ease-out); }
 .related-posts li a:hover { transform: translateX(3px); color: var(--accent-a); }
 .related-date { color: var(--secondary); font-size: .82rem; white-space: nowrap; }
 
 /* 首页信息卡到列表的空隙 */
 .first-entry { margin: 1.4rem 0 1.6rem; }
 
-/* ---------- 5. 动效 ---------- */
-/* 列表卡片滚动渐显 */
-.reveal { opacity: 0; transform: translateY(14px); }
-.reveal.is-visible {
-  opacity: 1; transform: none;
-  transition: opacity .55s var(--ease-out), transform .55s var(--ease-out);
-}
-/* 文章标题渐入 */
-.post-single .post-header { animation: rise-in .5s var(--ease-out) both; }
-@keyframes rise-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-
-/* 跨页面转场（View Transitions，不支持的浏览器自动忽略） */
-@view-transition { navigation: auto; }
-::view-transition-old(root) { animation: vt-out .18s ease both; }
-::view-transition-new(root) { animation: vt-in .3s var(--ease-out) both; }
-@keyframes vt-out { to { opacity: 0; } }
-@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
-
-/* ---------- 6. 小屏与无障碍 ---------- */
-@media (max-width: 720px) {
-  #bg-blobs i { filter: blur(60px); opacity: .26 !important; }
-  #bg-canvas { opacity: .7; }
-  body::before { height: 30vh; }
-}
-@media (prefers-reduced-motion: reduce) {
-  #bg-blobs i { animation: none !important; }
-  .reveal { opacity: 1 !important; transform: none !important; }
-  .post-entry, .post-entry:hover { transform: none !important; }
-  .post-single .post-header { animation: none !important; }
-  #reading-progress { display: none; }
-  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
-  .post-content img:hover { transform: none; }
-}
-
-/* ---------- 7. 更多动效 ---------- */
-/* 平滑滚动 + 标题占位（打字机时不跳） */
-html { scroll-behavior: smooth; }
-.home-info .entry-header h1 { min-height: 1.25em; }
-
-/* 打字机光标 */
-.type-caret {
-  display: inline-block; width: 2px; height: 1em; margin-left: 3px;
-  vertical-align: -2px; background: currentColor;
-  animation: caret-blink 1s steps(1) infinite;
-}
-@keyframes caret-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-
-/* 鼠标跟光 */
-#cursor-glow {
-  position: fixed; left: 0; top: 0; width: 520px; height: 520px;
-  margin: -260px 0 0 -260px; border-radius: 50%; pointer-events: none;
-  z-index: -1; opacity: 0; transition: opacity .5s ease;
-  filter: blur(30px);
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-a) 26%, transparent), transparent 62%);
-}
-#cursor-glow.on { opacity: .85; }
-html[data-theme="dark"] #cursor-glow { mix-blend-mode: screen; }
-
-/* 导航链接下划线滑入 */
-.header-nav a { position: relative; }
-.header-nav a::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: -3px; height: 1.5px;
-  background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
-  transform: scaleX(0); transform-origin: 0 50%;
-  transition: transform .28s var(--ease-out);
-}
-.header-nav a:hover::after, .header-nav a.active::after { transform: scaleX(1); }
-
-/* 封面悬停微放大 */
-.post-entry .entry-cover { overflow: hidden; border-radius: 8px; }
-.post-entry .entry-cover img { transition: transform .55s var(--ease-out); }
-.post-entry:hover .entry-cover img { transform: scale(1.04); }
-
-/* 右下角环形进度（点一下回顶部），顺便替掉原生的小箭头 */
-#top-link { display: none !important; }
-#scroll-ring {
-  position: fixed; right: 20px; bottom: 20px; width: 46px; height: 46px;
-  z-index: 900; cursor: pointer; opacity: 0; pointer-events: none;
-  transition: opacity .3s ease, transform .3s var(--ease-out);
-}
-#scroll-ring.show { opacity: 1; pointer-events: auto; }
-#scroll-ring:hover { transform: translateY(-3px) scale(1.06); }
-#scroll-ring svg { display: block; transform: rotate(-90deg); }
-#scroll-ring .ring-bg { fill: none; stroke: color-mix(in srgb, var(--primary) 15%, transparent); stroke-width: 3; }
-#scroll-ring .ring-fg { fill: none; stroke: url(#ringGrad); stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset .1s linear; }
-#scroll-ring .ring-arrow {
-  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 15px; color: var(--secondary); transition: color .2s var(--ease-out), transform .2s var(--ease-out);
-}
-#scroll-ring:hover .ring-arrow { color: var(--accent-a); transform: translateY(-1px); }
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  #cursor-glow { display: none; }
-  .type-caret { animation: none; }
-  .post-entry:hover .entry-cover img { transform: none; }
-}
-
-/* ---------- 8. 自定义光标 ---------- */
-#cursor-dot, #cursor-ring {
-  position: fixed; left: 0; top: 0; pointer-events: none; z-index: 1200;
-  opacity: 0; will-change: transform;
-}
-#cursor-dot.on, #cursor-ring.on { opacity: 1; }
-#cursor-dot {
-  width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-a) 55%, transparent), transparent 70%);
-  filter: blur(4px);
-  transition: width .18s var(--ease-out), height .18s var(--ease-out),
-              margin .18s var(--ease-out), opacity .25s ease;
-}
-#cursor-ring {
-  width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--accent-a) 75%, transparent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent-a) 35%, transparent);
-  transition: width .22s var(--ease-out), height .22s var(--ease-out),
-              margin .22s var(--ease-out), background-color .22s var(--ease-out),
-              border-color .22s var(--ease-out), opacity .25s ease;
-}
-#cursor-dot.on, #cursor-ring.on { opacity: 1; }
-#cursor-ring.hot {
-  width: 54px; height: 54px; margin: -27px 0 0 -27px;
-  background: color-mix(in srgb, var(--accent-a) 12%, transparent);
-  border-color: color-mix(in srgb, var(--accent-a) 85%, transparent);
-}
-#cursor-dot.hot { width: 4px; height: 4px; margin: -2px 0 0 -2px; }
-@media (pointer: coarse) {
-  #cursor-dot, #cursor-ring { display: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  #cursor-dot, #cursor-ring { display: none; }
-}
-
-/* ---------- 9. 动效增强（参考「码格」模板的手势） ---------- */
-/* 卡片扫光：鼠标划过时一道柔光扫过 */
-.post-entry::before {
-  content: ''; position: absolute; top: 0; left: -120%; width: 55%; height: 100%;
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-a) 14%, transparent), transparent);
-  transform: skewX(-18deg); pointer-events: none;
-  transition: left .75s cubic-bezier(.22, .8, .32, 1);
-}
-.post-entry:hover::before { left: 150%; }
-
+/* ---------- 9. 滚动入场编排 ---------- */
 /* 列表依次浮现（纯 CSS，JS 没跑也照样能看到内容） */
-.post-entry, .first-entry { animation: entry-rise .6s cubic-bezier(.22, .8, .32, 1) both; }
+.post-entry, .first-entry { animation: entry-rise .65s var(--ease-out) both; }
 .post-entry:nth-child(1) { animation-delay: .04s; }
 .post-entry:nth-child(2) { animation-delay: .10s; }
 .post-entry:nth-child(3) { animation-delay: .16s; }
@@ -376,28 +313,116 @@ html[data-theme="dark"] #cursor-glow { mix-blend-mode: screen; }
 .post-entry:nth-child(5) { animation-delay: .28s; }
 .post-entry:nth-child(6) { animation-delay: .34s; }
 .post-entry:nth-child(n+7) { animation-delay: .40s; }
-@keyframes entry-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-
-/* 环形进度：渐变缓慢自转，看着更“活” */
-#scroll-ring svg { animation: ring-spin 9s linear infinite; }
-@keyframes ring-spin { to { transform: rotate(270deg); } }
+@keyframes entry-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 
 /* 文章正文的段落/标题依次浮现 */
-.post-single .post-content > * { animation: content-rise .5s cubic-bezier(.22, .8, .32, 1) both; }
-.post-single .post-content > *:nth-child(1) { animation-delay: .05s; }
-.post-single .post-content > *:nth-child(2) { animation-delay: .10s; }
-.post-single .post-content > *:nth-child(3) { animation-delay: .15s; }
-.post-single .post-content > *:nth-child(4) { animation-delay: .20s; }
-.post-single .post-content > *:nth-child(n+5) { animation-delay: .25s; }
+.post-single .post-content > * { animation: content-rise .55s var(--ease-out) both; }
+.post-single .post-content > *:nth-child(1) { animation-delay: .04s; }
+.post-single .post-content > *:nth-child(2) { animation-delay: .09s; }
+.post-single .post-content > *:nth-child(3) { animation-delay: .14s; }
+.post-single .post-content > *:nth-child(4) { animation-delay: .19s; }
+.post-single .post-content > *:nth-child(n+5) { animation-delay: .24s; }
 @keyframes content-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
+/* 文章标题渐入 */
+.post-single .post-header { animation: rise-in .55s var(--ease-out) both; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* 跨页面转场（View Transitions，不支持的浏览器自动忽略） */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: vt-out .18s ease both; }
+::view-transition-new(root) { animation: vt-in .32s var(--ease-out) both; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
+
+/* ---------- 10. 平滑滚动 + 打字机 ---------- */
+html { scroll-behavior: smooth; }
+.home-info .entry-header h1 { min-height: 1.25em; }
+
+.type-caret {
+  display: inline-block; width: 2px; height: 1em; margin-left: 3px;
+  vertical-align: -2px; background: currentColor;
+  animation: caret-blink 1s steps(1) infinite;
+}
+@keyframes caret-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+/* ---------- 11. 自定义光标：v1 有四套，这里收敛为一套「双速跟随环」 ---------- */
+/* v1 的 bug：加了 .cursor-custom 类却从没写 cursor:none，
+   导致系统箭头 + 粉点 + 环 + 光晕 四件套同时跟手。这里一并修掉。 */
+html.cursor-custom,
+html.cursor-custom * { cursor: none !important; }
+
+#cursor-dot, #cursor-ring {
+  position: fixed; left: 0; top: 0; pointer-events: none; z-index: 1200;
+  opacity: 0; will-change: transform;
+}
+#cursor-dot.on, #cursor-ring.on { opacity: 1; }
+
+/* 光点：跟得紧（快） */
+#cursor-dot {
+  width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%;
+  background: var(--accent-a);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-a) 70%, transparent);
+  transition: width var(--dur-fast) var(--ease-out), height var(--dur-fast) var(--ease-out),
+              margin var(--dur-fast) var(--ease-out), opacity var(--dur-base) ease;
+}
+/* 环：跟得慢（惯性拖尾），hover 可点元素时放大 */
+#cursor-ring {
+  width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--accent-a) 70%, transparent);
+  transition: width var(--dur-base) var(--ease-spring), height var(--dur-base) var(--ease-spring),
+              margin var(--dur-base) var(--ease-spring),
+              background-color var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out), opacity var(--dur-base) ease;
+}
+#cursor-ring.hot {
+  width: 52px; height: 52px; margin: -26px 0 0 -26px;
+  background: color-mix(in srgb, var(--accent-a) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent-a) 85%, transparent);
+}
+#cursor-dot.hot { width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; }
+
+/* 触屏 / 降级：整套光标隐藏，恢复系统箭头 */
+@media (pointer: coarse) {
+  #cursor-dot, #cursor-ring { display: none; }
+  html.cursor-custom, html.cursor-custom * { cursor: auto !important; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .post-entry, .first-entry, .post-single .post-content > * { animation: none !important; }
-  #scroll-ring svg { animation: none; }
-  .post-entry::before { display: none; }
+  #cursor-dot, #cursor-ring { display: none; }
+  html.cursor-custom, html.cursor-custom * { cursor: auto !important; }
 }
 
-/* ---------- 10. 首页循环打字机标语（头像已按主人要求去掉） ---------- */
+/* ---------- 12. 导航链接下划线滑入 ---------- */
+.header-nav a { position: relative; }
+.header-nav a::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -3px; height: 1.5px;
+  background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+  transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.header-nav a:hover::after, .header-nav a.active::after { transform: scaleX(1); }
+
+/* ---------- 13. 右下角环形进度（点一下回顶部） ---------- */
+#top-link { display: none !important; }
+#scroll-ring {
+  position: fixed; right: 20px; bottom: 92px; width: 46px; height: 46px;
+  z-index: 900; cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity var(--dur-base) ease, transform var(--dur-base) var(--ease-spring);
+}
+#scroll-ring.show { opacity: 1; pointer-events: auto; }
+#scroll-ring:hover { transform: translateY(-3px) scale(1.06); }
+#scroll-ring svg { display: block; transform: rotate(-90deg); animation: ring-spin 9s linear infinite; }
+@keyframes ring-spin { to { transform: rotate(270deg); } }
+#scroll-ring .ring-bg { fill: none; stroke: color-mix(in srgb, var(--primary) 15%, transparent); stroke-width: 3; }
+#scroll-ring .ring-fg { fill: none; stroke: url(#ringGrad); stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset .1s linear; }
+#scroll-ring .ring-arrow {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: var(--secondary);
+  transition: color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+#scroll-ring:hover .ring-arrow { color: var(--accent-a); transform: translateY(-1px); }
+
+/* ---------- 14. 首页 hero（渐变标题 + 打字机 + 三张数据卡） ---------- */
 #home-typing { display: none; }
 #home-typing.show {
   display: block; text-align: center; min-height: 26px; margin: -4px 0 6px;
@@ -413,20 +438,6 @@ html[data-theme="dark"] #cursor-glow { mix-blend-mode: screen; }
 .home-info .entry-content { text-align: center; }
 .home-info .entry-footer { text-align: center; }
 
-@media (prefers-reduced-motion: reduce) {
-  #home-typing .t-caret { animation: none; }
-}
-
-/* ---------- 11. 「这份主题」的招牌部件（粉紫渐变 hero / 数据卡 / 看板娘 / 转场帘） ---------- */
-:root {
-  --cc-pink: #f472b6;
-  --cc-purple: #a78bfa;
-  --cc-blue: #60a5fa;
-  --cc-gradient: linear-gradient(90deg, #f472b6, #a78bfa, #60a5fa, #f472b6);
-  --cc-glow: rgba(244, 114, 182, .35);
-}
-
-/* 首页 hero：放大的渐变标题 + 打字机 + 社交图标 + 三张数据卡 */
 .cc-home-hero { text-align: center; padding: 1.2rem 0 .4rem; }
 .cc-home-hero .cc-hero-title {
   font-size: 2.1rem; font-weight: 800; margin: 0 0 .4rem; line-height: 1.3;
@@ -441,6 +452,7 @@ html[data-theme="dark"] #cursor-glow { mix-blend-mode: screen; }
 @keyframes cc-gradient-slide { to { background-position: 300% 50%; } }
 .cc-home-hero .cc-sub { color: var(--secondary); font-size: .95rem; margin: .2rem 0 .6rem; }
 .cc-home-hero .social-icons { margin-top: .5rem; }
+
 .cc-bento {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: .7rem; max-width: 520px; margin: 1.3rem auto 0;
@@ -451,7 +463,8 @@ html[data-theme="dark"] #cursor-glow { mix-blend-mode: screen; }
   background: rgba(255, 255, 255, .55); border: 1px solid rgba(255, 255, 255, .6);
   backdrop-filter: blur(12px) saturate(160%); -webkit-backdrop-filter: blur(12px) saturate(160%);
   box-shadow: 0 6px 20px rgba(31, 31, 31, .06);
-  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1), box-shadow .35s ease, border-color .35s ease;
+  transition: transform var(--dur-base) var(--ease-spring),
+              box-shadow var(--dur-base) ease, border-color var(--dur-base) ease;
 }
 html[data-theme="dark"] .cc-bento-card {
   background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .10);
@@ -470,30 +483,40 @@ html[data-theme="dark"] .cc-bento-card {
 }
 .cc-bento-label { font-size: .74rem; color: var(--secondary); }
 
-/* 看板娘 + 气泡 */
+/* ---------- 15. 看板娘（与环形进度错开位置，避免抢右下角） ---------- */
 #cc-girl {
   position: fixed; right: 10px; bottom: -4px; width: 148px; height: auto; z-index: 996;
   cursor: pointer; animation: cc-girl-float 3.8s ease-in-out infinite;
-  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+  transition: transform var(--dur-base) var(--ease-spring);
   filter: drop-shadow(0 6px 18px rgba(244, 114, 182, .35));
   user-select: none;
 }
 #cc-girl:hover { transform: scale(1.06); }
 @keyframes cc-girl-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+/* 气泡改成"文字贴纸"风：更轻、跟随主题色，去掉厚重的固定插画感 */
 #cc-girl-bubble {
-  position: fixed; right: 120px; bottom: 150px; max-width: 230px; z-index: 996;
-  padding: .7rem 1rem; border-radius: 14px 14px 4px 14px;
-  background: rgba(255, 255, 255, .95); color: #4a4458; font-size: .88rem; line-height: 1.5;
-  box-shadow: 0 8px 28px rgba(244, 114, 182, .28), 0 0 0 1px rgba(244, 114, 182, .25);
+  position: fixed; right: 118px; bottom: 152px; max-width: 230px; z-index: 996;
+  padding: .6rem .9rem; border-radius: 12px 12px 4px 12px;
+  background: color-mix(in srgb, var(--theme) 92%, transparent);
+  color: var(--primary); font-size: .86rem; line-height: 1.55;
+  border: 1px solid color-mix(in srgb, var(--cc-pink) 32%, transparent);
+  box-shadow: 0 8px 26px rgba(244, 114, 182, .22);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
   opacity: 0; transform: translateY(10px) scale(.92); transform-origin: bottom right;
-  transition: opacity .35s ease, transform .35s cubic-bezier(.34, 1.56, .64, 1);
+  transition: opacity var(--dur-base) ease, transform var(--dur-base) var(--ease-spring);
   pointer-events: none;
 }
-html[data-theme="dark"] #cc-girl-bubble { background: rgba(46, 46, 51, .96); color: #ececf1; }
 #cc-girl-bubble.show { opacity: 1; transform: none; }
-@media (max-width: 720px) { #cc-girl { width: 104px; opacity: .95; } #cc-girl-bubble { right: 84px; bottom: 120px; max-width: 190px; } }
 
-/* 页面切换的渐变帘子 */
+@media (max-width: 720px) {
+  #cc-girl { width: 104px; opacity: .95; }
+  #cc-girl-bubble { right: 84px; bottom: 122px; max-width: 190px; }
+  #scroll-ring { bottom: 78px; right: 16px; }
+}
+
+/* ---------- 16. 页面切换渐变帘子（v1 会拦截中键/Ctrl+点击，已在 JS 修复） ---------- */
 #cc-veil {
   position: fixed; inset: 0; z-index: 9999; pointer-events: none;
   background: linear-gradient(135deg, #1d1e20, #2a2438 45%, #3b2c44);
@@ -502,37 +525,28 @@ html[data-theme="dark"] #cc-girl-bubble { background: rgba(46, 46, 51, .96); col
 html:not([data-theme="dark"]) #cc-veil { background: linear-gradient(135deg, #fff5fb, #f3ecff 45%, #fde9f4); }
 #cc-veil.out { opacity: 0; }
 
-/* 文章小标题滑入时左侧出现渐变竖条 */
-.cc-head { position: relative; transition: color .45s ease, padding-left .45s cubic-bezier(.22, .61, .36, 1); }
+/* ---------- 17. 文章小标题滑入渐变竖条 ---------- */
+.cc-head {
+  position: relative;
+  transition: color .45s ease, padding-left .45s cubic-bezier(.22, .61, .36, 1);
+}
 .cc-head::before {
   content: ''; position: absolute; left: 0; top: .28em; width: 3px; height: 0;
   border-radius: 3px; background: var(--cc-gradient);
-  transition: height .45s cubic-bezier(.22, .61, .36, 1);
+  transition: height .5s cubic-bezier(.2, .8, .3, 1.1);   /* 带一点 overshoot */
 }
 .cc-head.cc-head-in { color: var(--cc-pink); padding-left: 14px; }
 .cc-head.cc-head-in::before { height: 1.1em; }
 html:not([data-theme="dark"]) .cc-head.cc-head-in { color: #db2777; }
 
 /* 图片渐显 */
-.cc-img-fade { opacity: 0; transform: scale(1.03); filter: blur(8px); transition: opacity .7s ease, transform .7s cubic-bezier(.22, .61, .36, 1), filter .7s ease; }
+.cc-img-fade {
+  opacity: 0; transform: scale(1.03); filter: blur(8px);
+  transition: opacity var(--dur-slow) ease, transform var(--dur-slow) var(--ease-out), filter var(--dur-slow) ease;
+}
 .cc-img-fade.cc-in { opacity: 1; transform: none; filter: none; }
 
-@media (prefers-reduced-motion: reduce) {
-  .cc-home-hero .cc-hero-title, .cc-bento-num { animation: none; }
-  #cc-girl { animation: none; }
-  .cc-img-fade { opacity: 1; transform: none; filter: none; }
-}
-
-/* 樱花画布：必须固定定位，否则会占满一屏把内容挤下去 */
-#cc-sakura {
-  position: fixed; inset: 0; z-index: -1;
-  width: 100%; height: 100%;
-  pointer-events: none;
-}
-
-/* ---------- 12.（已按主人要求撤回宽屏横排，恢复原来的竖排） ---------- */
-
-/* ---------- 13. 导航栏：去掉那个横竖都冒出来的滚动条 ---------- */
+/* ---------- 18. 导航栏：去掉那个横竖都冒出来的滚动条 ---------- */
 .menu {
   overflow: visible;
   flex-wrap: wrap;
@@ -542,3 +556,22 @@ html:not([data-theme="dark"]) .cc-head.cc-head-in { color: #db2777; }
 .menu::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .header-nav { overflow: visible; }
 html, body { overflow-x: clip; }
+
+/* ---------- 19. 无障碍：降低动效时全部静态化 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  #bg-blobs i { animation: none !important; }
+  #cc-girl { animation: none; }
+  #scroll-ring svg { animation: none; }
+  .type-caret, #home-typing .t-caret { animation: none; }
+  #reading-progress { display: none; }
+  .post-entry, .first-entry,
+  .post-single .post-content > *,
+  .post-single .post-header { animation: none !important; }
+  .post-entry, .post-entry:hover { transform: none !important; }
+  .post-entry:hover .entry-cover img { transform: none; }
+  .post-content img:hover { transform: none; }
+  .cc-home-hero .cc-hero-title, .cc-bento-num { animation: none; }
+  .cc-img-fade { opacity: 1; transform: none; filter: none; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+}
