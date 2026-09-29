@@ -50,7 +50,8 @@
     {{- end -}}
   {{- end -}}
   {{- $src := $img | default $auto -}}
-  {{- if $src -}}
+  {{- /* 显式写了 cover.image 的文章，也要尊重 hiddenInSingle / hiddenInList / hidden 这几个开关 */ -}}
+  {{- if and $src (not $isHidden) -}}
 <figure class="entry-cover{{ if .Params.cover.hiddenInSingle }} cover-hidden-single{{ end }}">
     <img loading="{{ cond $.IsSingle "eager" "lazy" }}" src="{{ $src | absURL }}" alt="{{ .Params.cover.alt | default .Title }}">
 </figure>
