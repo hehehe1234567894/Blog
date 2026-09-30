@@ -51,7 +51,8 @@
   var dpr = Math.min(2, window.devicePixelRatio || 1);
   var W = 0, H = 0, raf = null, tick = 0;
   var fine = window.matchMedia('(pointer: fine)').matches;
-  var field = [], tparts = [], burst = 0;
+  var field = [], tparts = [], explodeUntil = 0, lastT = 0;
+  var EXPLODE_MS = 1400;              /* 点击炸开后纯物理飞行多久（毫秒，按时间算而不是按帧数，慢机器上时长才一致） */
   var pointer = { x: -9999, y: -9999, active: false };
 
   function themeInk() {
@@ -150,12 +151,34 @@
     try { document.body.setAttribute('data-bg-particles', field.length + '/' + tparts.length); } catch (e) {}
   }
 
-  function scatter() {
-    for (var i = 0; i < tparts.length; i++) {
-      var p = tparts[i];
-      p.x = Math.random() * W;
-      p.y = Math.random() * H;
+  /* 点击炸开：**只给每个粒子一个初速度，绝不改位置** —— 飞出去的那段过程才是要看的动画。
+     以前这里是 p.x = Math.random() * W，相当于把粒子瞬移到全屏随机点，所以看起来"没有动画"。 */
+  function explode(ox, oy) {
+    var n = tparts.length;
+    if (!n) return;
+    if (typeof ox !== 'number' || typeof oy !== 'number' || !isFinite(ox) || !isFinite(oy)) {
+      /* 没有点击坐标（比如键盘触发）就用文字中心当爆心 */
+      var sx = 0, sy = 0;
+      for (var j = 0; j < n; j++) { sx += tparts[j].tx; sy += tparts[j].ty; }
+      ox = sx / n; oy = sy / n;
     }
+    for (var i = 0; i < n; i++) {
+      var p = tparts[i];
+      /* 爆心 → 粒子 的方向为主，叠一点随机角，避免所有粒子排成一条直线 */
+      var ang = Math.atan2(p.y - oy, p.x - ox) + (Math.random() - 0.5) * 0.9;
+      /* 离爆心越远给越快一点，这样"由内向外推开"的层次更清楚 */
+      var dx = p.x - ox, dy = p.y - oy;
+      var dist = Math.sqrt(dx * dx + dy * dy) / dpr;
+      var speed = (4.2 + Math.random() * 5.8 + Math.min(4, dist / 90)) * dpr;   /* px/帧 */
+      p.vx = Math.cos(ang) * speed;
+      p.vy = Math.sin(ang) * speed;
+      p.drag = Math.random();        /* 0~1：越大阻尼越强，随机一点飞行距离才有疏密 */
+    }
+    explodeUntil = nowMs() + EXPLODE_MS;
+  }
+
+  function nowMs() {
+    return (window.performance && performance.now) ? performance.now() : Date.now();
   }
 
   /* 初始状态：贴着目标位置稍微散开，第一帧就能看出是 MIEW */
@@ -227,21 +250,51 @@
       }
     }
 
-    /* MIEW 粒子文字：聚拢 → 保持 → 鼠标拨开 / 滚动散成星尘 */
-    var dissolved = window.scrollY > 120 || burst > 0;
+    /* MIEW 粒子文字：聚拢 → 保持 → 鼠标拨开 / 点击炸开 → 自己飞回去 / 滚动散成星尘 */
+    var nowT = nowMs();
+    var step = lastT ? Math.min(3, (nowT - lastT) / 16.7) : 1;   /* 归一化到 60fps 的步长，慢机器上物理也一致 */
+    lastT = nowT;
+    var flying = nowT < explodeUntil;
+    var dissolved = window.scrollY > 120 || flying;
     for (var t = 0; t < tparts.length; t++) {
       var tp = tparts[t];
-      var tx = tp.tx, ty = tp.ty;
-      if (dissolved) {
-        tx = tp.x + Math.sin(tick * 0.5 + tp.ph) * 34 * dpr;
-        ty = tp.y + Math.cos(tick * 0.45 + tp.ph) * 34 * dpr;
-      }
-      var ease = reduce ? 1 : (dissolved ? 0.012 : 0.055);
-      tp.x += (tx - tp.x) * ease;
-      tp.y += (ty - tp.y) * ease;
-      if (!dissolved) {
-        tp.x += Math.sin(tick * 0.9 + tp.ph) * 0.18 * dpr;
-        tp.y += Math.cos(tick * 0.8 + tp.ph) * 0.18 * dpr;
+      var alpha;
+      if (flying) {
+        /* ① 炸开阶段：位置由初速度推着走 + 空气阻尼，速度越慢拖尾越短 */
+        var px0 = tp.x, py0 = tp.y;
+        tp.x += tp.vx * step; tp.y += tp.vy * step;
+        var damp = Math.pow(0.934 + (tp.drag || 0) * 0.036, step);
+        tp.vx *= damp; tp.vy *= damp;
+        var spd = Math.sqrt(tp.vx * tp.vx + tp.vy * tp.vy);          /* px/帧（含 dpr） */
+        alpha = 0.16 + Math.min(0.62, spd / dpr * 0.055);
+        /* 运动拖尾：让"散开"这件事在视觉上留下轨迹，而不是一个个孤立亮点 */
+        var tail = Math.min(18, spd * 1.5);
+        if (tail > 1.2) {
+          ctx.strokeStyle = 'rgba(' + ink.text[tp.c] + ',' + (alpha * 0.5).toFixed(3) + ')';
+          ctx.lineWidth = Math.max(0.8, tp.r * 0.9);
+          ctx.beginPath();
+          ctx.moveTo(px0 - tp.vx / (spd || 1) * tail, py0 - tp.vy / (spd || 1) * tail);
+          ctx.lineTo(tp.x, tp.y);
+          ctx.stroke();
+        }
+      } else {
+        /* ② 常态：回到字形；③ 滚动后：在当前位置附近慢速游走（星尘） */
+        var tx = tp.tx, ty = tp.ty;
+        if (dissolved) {
+          tx = tp.x + Math.sin(tick * 0.5 + tp.ph) * 34 * dpr;
+          ty = tp.y + Math.cos(tick * 0.45 + tp.ph) * 34 * dpr;
+        }
+        /* 回聚/游走的速度也按实际帧间隔归一化：慢机器上不会变成"慢动作" */
+        var ease = reduce ? 1 : (dissolved ? 0.012 : 0.055) * step;
+        if (ease > 1) ease = 1;
+        tp.x += (tx - tp.x) * ease;
+        tp.y += (ty - tp.y) * ease;
+        if (!dissolved) {
+          tp.x += Math.sin(tick * 0.9 + tp.ph) * 0.18 * dpr;
+          tp.y += Math.cos(tick * 0.8 + tp.ph) * 0.18 * dpr;
+        }
+        var near = Math.abs(tp.x - tp.tx) + Math.abs(tp.y - tp.ty);
+        alpha = dissolved ? 0.16 : Math.max(0.14, 0.5 - near / (300 * dpr));
       }
       if (pointer.active) {
         var tdx = tp.x - pointer.x, tdy = tp.y - pointer.y, td2 = tdx * tdx + tdy * tdy;
@@ -251,19 +304,31 @@
           tp.x += (tdx / td) * tf; tp.y += (tdy / td) * tf;
         }
       }
-      var near = Math.abs(tp.x - tp.tx) + Math.abs(tp.y - tp.ty);
-      var alpha = dissolved ? 0.16 : Math.max(0.14, 0.5 - near / (300 * dpr));
       ctx.beginPath();
       ctx.arc(tp.x, tp.y, tp.r, 0, 6.28318);
       ctx.fillStyle = 'rgba(' + ink.text[tp.c] + ',' + alpha.toFixed(3) + ')';
       ctx.fill();
     }
-    if (burst > 0) burst -= 1;
   }
 
   function loop() { draw(); raf = requestAnimationFrame(loop); }
   resize();
   prime();
+  /* 调试钩子：带上 ?miew-debug 才挂上，给自动化测试读粒子位置用（生产无副作用） */
+  if (/[?&]miew-debug/.test(location.search)) {
+    window.__miew = {
+      /* 用 getter：resize() 会整体重建 tparts，取引用会读到旧数组 */
+      get parts() { return tparts; },
+      explode: explode,
+      state: function () {
+        return {
+          flying: nowMs() < explodeUntil,
+          leftMs: Math.max(0, Math.round(explodeUntil - nowMs())),
+          scrollY: window.scrollY, raf: !!raf, tick: +tick.toFixed(2)
+        };
+      }
+    };
+  }
   if (reduce) { draw(); } else { loop(); }
 
   if (!reduce && fine) {
@@ -273,7 +338,8 @@
     window.addEventListener('pointerleave', function () { pointer.active = false; });
     window.addEventListener('pointerdown', function (e) {
       if (e.target.closest('a, button, input')) return;
-      burst = 40; scatter();
+      /* 用点击位置当爆心，粒子从字形出发向外飞 */
+      explode(e.clientX * dpr, e.clientY * dpr);
     });
   }
 
