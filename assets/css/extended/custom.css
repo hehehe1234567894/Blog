@@ -510,10 +510,22 @@ html[data-theme="dark"] .cc-bento-card {
 }
 #cc-girl-bubble.show { opacity: 1; transform: none; }
 
-@media (max-width: 720px) {
-  #cc-girl { width: 104px; opacity: .95; }
-  #cc-girl-bubble { right: 84px; bottom: 122px; max-width: 190px; }
-  #scroll-ring { bottom: 78px; right: 16px; }
+@media (max-width: 1040px) {
+  /* 手机上不再浮动：固定定位的看板娘会压住评论区右下角那个绿色的「评论」（发送）按钮。
+     门槛是按几何算的：正文列 720px 居中，窗口宽度 < 1036px 时看板娘（右对齐 148px）
+     就会和评论区右边缘相交，所以 1040px 以下一律不浮动。
+     改成随文档流排在页脚下方 —— 看板娘还在，按钮也一定点得到。 */
+  #cc-girl {
+    position: static; display: block; margin: 14px auto 0; width: 124px;
+    opacity: .95; animation: none; filter: none;
+  }
+  #cc-girl-bubble {
+    position: static; display: block; margin: 10px auto 0; max-width: 240px;
+    transform-origin: bottom center;
+  }
+  /* 右下角的环形进度也是 fixed，同样会盖住 giscus 的发送键；手机上直接不显示
+     （手机上滑到顶是系统手势，不需要它） */
+  #scroll-ring { display: none; }
 }
 
 /* ---------- 16. 页面切换渐变帘子（v1 会拦截中键/Ctrl+点击，已在 JS 修复） ---------- */
