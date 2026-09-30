@@ -54,7 +54,7 @@ summaryLength = 80
 
   # Giscus 评论：基于 GitHub Discussions
   [params.giscus]
-    repo = "hehehe1234567894/Blog"
+    repo = "hehehe1234567894/MySuperBlog"   # 仓库改名后必须跟着改：giscus 服务端是按「仓库名」查 App 安装的，写旧名会 403 not installed
     repoId = "R_kgDOUuJ_eg"
     category = "Announcements"
     categoryId = "DIC_kwDOUuJ_es4DGf-1"
