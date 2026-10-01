@@ -41,10 +41,14 @@
   --wrap: 900px;          /* 参考站正文列 780px；这里给卡片留一点余量 */
   --nav-h: 60px;
 
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-    "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
-  --font-mono: "JetBrains Mono", "Cascadia Code", ui-monospace, Menlo, Consolas,
-    "Sarasa Mono SC", monospace;
+  /* 字体跟参考站对齐（它用的是 Google Fonts 的 Ubuntu + Source Code Pro + Noto Serif SC）：
+     Ubuntu / Source Code Pro 只覆盖拉丁，已被自托管在 assets/fonts（见 partials/fonts.html）；
+     中文没有跟 Ubuntu 配套的字体，继续落系统里最好看的那个（PingFang / 微软雅黑 / 思源黑体）。
+     所以字体栈的顺序是「先拉丁字体、再中文回退」——拉丁字形由 Ubuntu 出，汉字交给系统。 */
+  --font: Ubuntu, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", "Noto Sans CJK SC", sans-serif;
+  --font-mono: "Source Code Pro", "JetBrains Mono", "Cascadia Code", ui-monospace,
+    Menlo, Consolas, "Sarasa Mono SC", monospace;
 
   --ease: cubic-bezier(.22, .8, .32, 1);
   --dur: .3s;

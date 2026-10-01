@@ -1,0 +1,21 @@
+{{- /*
+  自托管字体（不使用任何外部 CDN）：
+  参考站用的是 Google Fonts 的 Ubuntu + Source Code Pro + Noto Serif SC。
+  Ubuntu / Source Code Pro 只覆盖拉丁字母，文件很小（合计 ~144KB），直接下载进主题自托管；
+  Noto Serif SC 是 CJK 字体（每份子集好几 MB），只作为 font-family 回退名出现，
+  设备上有就用、没有就落到系统衬线字体 —— 不为了一个标题去下载几 MB。
+
+  unicode-range 照抄 Google 的分段：浏览器只在真的用到那些字符时才下载对应文件，
+  中文页面看到英文标题时才拉拉丁字体，不会白下载。
+*/ -}}
+{{- $faces := slice
+  (dict "file" "fonts/ubuntu-400-latin.woff2" "family" "Ubuntu" "weight" "400" "range" "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD")
+  (dict "file" "fonts/ubuntu-400-latin-ext.woff2" "family" "Ubuntu" "weight" "400" "range" "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF")
+  (dict "file" "fonts/ubuntu-700-latin.woff2" "family" "Ubuntu" "weight" "700" "range" "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD")
+  (dict "file" "fonts/sourcecodepro-400-latin.woff2" "family" "Source Code Pro" "weight" "400 700" "range" "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD")
+-}}
+<style>
+{{- range $f := $faces }}{{ with resources.Get $f.file }}
+@font-face{font-family:'{{ $f.family }}';font-style:normal;font-weight:{{ $f.weight }};font-display:swap;unicode-range:{{ $f.range }};src:url('{{ .RelPermalink }}') format('woff2')}
+{{- end }}{{ end }}
+</style>
