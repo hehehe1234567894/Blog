@@ -1,0 +1,25 @@
+{{- /* 归档页：按年份分组，年份之间用虚线分隔（参考站的 year 归档就是这个形态）。 */ -}}
+{{ define "main" }}
+{{- $posts := where site.RegularPages "Section" (index (site.Params.mainSections | default (slice "posts")) 0) }}
+
+<header class="page-head">
+  <h1 class="page-title">{{ .Title | default (i18n "archives") }}</h1>
+  <p class="page-desc">{{ i18n "post_count" (dict "Count" (len $posts)) }}</p>
+</header>
+
+<div class="archive">
+  {{- range $posts.GroupByDate "2006" }}
+  <section class="archive-year">
+    <h2 class="archive-year-label">{{ .Key }}</h2>
+    <ul class="archive-list">
+      {{- range .Pages }}
+      <li>
+        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "01-02" }}</time>
+        <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+      </li>
+      {{- end }}
+    </ul>
+  </section>
+  {{- end }}
+</div>
+{{ end }}

@@ -1,0 +1,22 @@
+# sakura-lite —— 为 MIEW 博客重写的轻量主题
+# 目标：还原 halo-theme-sakura 的观感，但把实现压到一个 CSS + 一个 JS。
+name = "sakura-lite"
+license = "MIT"
+description = "轻量 Hugo 主题：整屏 hero、横向文章卡片、樱花飘落、深色模式，无外部 CDN 依赖。"
+homepage = "https://blog.funnycode.site/"
+min_version = "0.146.0"
+
+[author]
+  name = "MIEW"
+
+[original]
+  # 视觉参考（非代码移植）：LIlGG 的 halo-theme-sakura
+  name = "halo-theme-sakura"
+  homepage = "https://github.com/LIlGG/halo-theme-sakura"
+
+[params]
+  # 这些是主题读取的可选参数，默认值见 layouts/_partials/head.html 与 footer.html
+  heroImage = ""
+  heroTitle = ""
+  heroSubtitle = ""
+  accent = "#ff6d6d"

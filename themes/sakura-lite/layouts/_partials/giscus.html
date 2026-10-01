@@ -1,0 +1,30 @@
+{{- /*
+  Giscus 评论（GitHub Discussions）。
+  配置全部来自站点 hugo.toml 的 [params.giscus]，主题不写死任何 id —— 
+  仓库改名时只改配置，这正是之前踩过的坑（写死旧仓库名会 403 not installed）。
+  注意：giscus 的 iframe 需要真实域名下的 Discussion 才能加载，本地预览会一直转圈，
+  这是预期行为，不是主题的 bug。
+*/ -}}
+{{- $g := site.Params.giscus }}
+{{- if and $g $g.repo $g.repoId $g.categoryId }}
+<section class="comments" id="comments">
+  <h2 class="comments-title">{{ i18n "comments" }}</h2>
+  <script src="https://giscus.app/client.js"
+          data-repo="{{ $g.repo }}"
+          data-repo-id="{{ $g.repoId }}"
+          data-category="{{ $g.category }}"
+          data-category-id="{{ $g.categoryId }}"
+          data-mapping="{{ $g.mapping | default "pathname" }}"
+          data-strict="{{ $g.strict | default "0" }}"
+          data-reactions-enabled="{{ $g.reactionsEnabled | default "1" }}"
+          data-emit-metadata="{{ $g.emitMetadata | default "0" }}"
+          data-input-position="{{ $g.inputPosition | default "top" }}"
+          data-theme="{{ $g.theme | default "preferred_color_scheme" }}"
+          data-lang="{{ $g.lang | default "zh-CN" }}"
+          data-loading="lazy"
+          crossorigin="anonymous"
+          async>
+  </script>
+  <noscript>评论需要 JavaScript（基于 GitHub Discussions，用 GitHub 账号登录即可发言）。</noscript>
+</section>
+{{- end }}

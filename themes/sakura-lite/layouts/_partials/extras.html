@@ -1,0 +1,21 @@
+{{- /*
+  浮动元素：樱花画布 + 看板娘。
+  看板娘在宽屏是 position:fixed，窄屏（<=1040px）由 CSS 改回文档流并排到页脚下面 ——
+  这个坑踩过：浮动时会挡住 giscus 评论区的发送按钮。所以这里同时渲染两份，
+  CSS 按断点显隐，不用 JS 判断（避免窄屏切换窗口宽度时状态错乱）。
+*/ -}}
+<canvas class="sakura" id="sakura" aria-hidden="true"></canvas>
+
+{{- with resources.Get "img/kanban-girl.png" }}
+  {{- $g := .Resize "300x webp q80" }}
+<div class="girl" id="girl-wrap">
+  <img id="girl" src="{{ $g.RelPermalink }}" width="{{ $g.Width }}" height="{{ $g.Height }}"
+       alt="看板娘" draggable="false" loading="lazy">
+</div>
+<div class="girl-bubble" id="girl-bubble" role="status" aria-live="polite"></div>
+{{- end }}
+
+{{- /* 回顶：窄屏隐藏（手机滑到顶是系统手势），宽屏才显示 */ -}}
+<button class="to-top" id="to-top" type="button" aria-label="{{ i18n "home" }}" hidden>
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M6 11l6-6 6 6"/></svg>
+</button>

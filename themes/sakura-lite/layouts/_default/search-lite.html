@@ -1,0 +1,45 @@
+{{ define "main" }}
+{{- /*
+  搜索页。
+  ---------------------------------------------------------------------------
+  这个文件必须「第一行就是 {{ define "main" }}」——Hugo 0.166 下，只要 define 之前
+  有任何内容（空格、换行、注释、变量赋值，任意一种），Hugo 就静默地不把它当成 block
+  模板，页面会回落到 _default/single.html，渲染成一篇标题是「搜索」、日期 0001-01-01
+  的空文章，而且不报任何错（这个坑排查了很久）。所以下面所有内容都在 define 里面。
+
+  模板名用 _default/search-lite.html + 内容页 layout: "search-lite"：
+  _default/search.html 这个名字在 0.166 下会被内置规则吃掉（自定义 layout 匹配不上，
+  也不报错），而且 PaperMod 根目录也有同名文件会跨主题抢优先级。
+
+  索引来源：/index.json（主题的 home.json.json 生成，站点配置里 home 的输出本来就含
+  JSON）。用 fetch 而不是内联，原因也是上面那条：内联需要把 jsonify 写在 define 之前，
+  而 block 内又读不到外层变量（读到 nil → "null"）。
+*/ -}}
+<header class="page-head">
+  <h1 class="page-title">{{ .Title | default (i18n "search") }}</h1>
+  <p class="page-desc">{{ i18n "search_hint" }}</p>
+</header>
+
+<div class="search-page" id="search-page">
+  <form class="search-form" role="search" onsubmit="return false">
+    <input type="search" id="search-input" placeholder="{{ i18n "search_placeholder" }}"
+           aria-label="{{ i18n "search" }}" autocomplete="off">
+    <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm5 11.5L20 20"/></svg>
+  </form>
+
+  <p class="search-status" id="search-status"></p>
+  <div class="cards" id="search-results"></div>
+
+  {{- /* JS 没起来 / 索引取不到时显形，给可点的替代入口，而不是留一片空白 */ -}}
+  <div class="empty" id="search-fallback" hidden>
+    <p>{{ i18n "search_ready" }}</p>
+    <p>
+      <a href="{{ "/posts/" | relURL }}">{{ i18n "posts" }}</a>
+      <span class="dot">·</span>
+      <a href="{{ "/tags/" | relURL }}">{{ i18n "tags" }}</a>
+      <span class="dot">·</span>
+      <a href="{{ "/archives/" | relURL }}">{{ i18n "archives" }}</a>
+    </p>
+  </div>
+</div>
+{{ end }}

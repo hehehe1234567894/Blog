@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+{{- /* 在 <html> 上就把主题定下来：放到 <body> 末尾再改会闪一下白屏。
+       内联脚本必须在任何 CSS 之前执行，所以它是 head 的第一件事。 */ -}}
+<html lang="{{ site.Language.Lang | default "zh-cn" }}" data-theme-init>
+<head>
+  {{- partial "head.html" . }}
+  <script>
+    /* 主题模式：'auto' 跟随系统。手动切过之后写进 localStorage，刷新保持。
+       try/catch 是因为隐私模式下 localStorage 可能直接抛错。 */
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem('theme'); } catch (e) {}
+      var sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', saved || sys);
+      document.documentElement.removeAttribute('data-theme-init');
+    })();
+  </script>
+</head>
+<body class="{{ if .IsHome }}is-home{{ else }}is-page{{ end }}">
+  {{- partial "nav.html" . }}
+
+  {{- /* 首页是整屏 hero（自带 <main>），其他页面用普通容器 */ -}}
+  {{- if .IsHome }}
+    {{- block "main" . }}{{ end }}
+  {{- else }}
+    <main class="wrap">
+      {{- block "main" . }}{{ end }}
+    </main>
+  {{- end }}
+
+  {{- partial "footer.html" . }}
+  {{- partial "extras.html" . }}
+  {{- partial "scripts.html" . }}
+</body>
+</html>

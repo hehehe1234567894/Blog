@@ -1,0 +1,21 @@
+{{- /*
+  站点配置里 home 的 outputs 含 JSON，原来的 PaperMod 用 index.json 模板实现它。
+  换成新主题后如果不提供这个模板，构建会报 "found no layout file for json"，
+  而且线上本来就存在的 /index.json 会消失（外部工具/脚本可能在用）。
+  这里保留同名产物，并让它同时充当搜索页的数据源：
+  字段（title/url/date/tags/cats/summary/content）和 assets/js/sakura.js 里读的一致。
+*/ -}}
+{{- $main := index (site.Params.mainSections | default (slice "posts")) 0 }}
+{{- $out := slice }}
+{{- range where site.RegularPages "Section" $main }}
+  {{- $out = $out | append (dict
+      "title" .Title
+      "url" .RelPermalink
+      "date" (.Date.Format "2006-01-02")
+      "tags" (delimit (.Params.tags | default slice) " ")
+      "cats" (delimit (.Params.categories | default slice) " ")
+      "summary" (.Summary | plainify | replaceRE `\s+` " " | truncate 140)
+      "content" (.Plain | replaceRE `\s+` " " | truncate 1200)
+  ) }}
+{{- end }}
+{{- $out | jsonify }}

@@ -1,0 +1,42 @@
+{{- /*
+  顶部导航。参考站是「左站点名 + 右菜单」的极简两栏，这里照搬结构。
+  玻璃拟态（backdrop-filter）是为了让导航在整屏 hero 上也能看清，同时不盖住封面。
+*/ -}}
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    {{- /* 站点名用它回首页：不用 site.BaseURL，子路径部署也不会错 */ -}}
+    <a class="brand" href="{{ "/" | relURL }}">{{ site.Title }}</a>
+
+    <nav class="nav-links" id="nav-links" aria-label="{{ i18n "home" }}">
+      {{- with site.Menus.main }}
+        {{- range . }}
+          {{- $active := or ($.IsMenuCurrent "main" .) ($.HasMenuCurrent "main" .) }}
+          {{- /* 归档 / 标签 / 分类这几个入口的 URL 对不上真实栏目，额外按栏目名判一次高亮 */ -}}
+          {{- $slug := strings.Trim .URL "/" }}
+          {{- if and (not $active) $slug }}{{ $active = eq (strings.Trim $.Section "/") $slug }}{{ end }}
+          <a href="{{ .URL | relURL }}"{{ if $active }} class="is-active" aria-current="page"{{ end }}>{{ .Name }}</a>
+        {{- end }}
+      {{- end }}
+    </nav>
+
+    <div class="nav-tools">
+      {{- /* 窄屏才显示的汉堡键（宽屏用 CSS 隐藏） */ -}}
+      <button class="nav-icon nav-burger" type="button" id="nav-burger" aria-label="{{ i18n "posts" }}" aria-expanded="false" aria-controls="nav-links">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></g></svg>
+      </button>
+      <a class="nav-icon" href="{{ "/" | relURL }}" title="{{ i18n "home" }}" aria-label="{{ i18n "home" }}">
+        <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path fill="currentColor" d="M12 3.2 3 10.6V21h6.4v-6h5.2v6H21V10.6z"/></svg>
+      </a>
+      {{- with site.GetPage "/search" }}
+      <a class="nav-icon" href="{{ .RelPermalink }}" title="{{ i18n "search" }}" aria-label="{{ i18n "search" }}">
+        <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm5 11.5L20 20"/></svg>
+      </a>
+      {{- end }}
+      {{- /* 深/浅色：按钮只是触发器，真正的状态在 <html data-theme> 上 */ -}}
+      <button class="nav-icon theme-btn" type="button" id="theme-toggle" aria-label="{{ i18n "switch_theme" }}" title="{{ i18n "switch_theme" }}">
+        <svg class="i-sun" viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2.4v2.6M12 19v2.6M2.4 12H5M19 12h2.6M5.2 5.2 7 7M17 17l1.8 1.8M18.8 5.2 17 7M7 17l-1.8 1.8"/></g></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path fill="currentColor" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>

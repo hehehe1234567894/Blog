@@ -1,0 +1,43 @@
+{{- /*
+  首页：整屏 hero + 最近文章卡片。
+  参考站首页把「Hi,Friend」压在大图正中、导航浮在上面，这里保持一致。
+  整块写成 baseof 的 "main" block：只有写成 block 才会套上 baseof 的
+  head / nav / footer；直接写在 home.html 顶层会绕过 baseof（导航和 CSS 全没有，
+  这个坑真的踩过）。注意 block 有自己的作用域，所以变量一律由 partial 内部算好返回。
+*/ -}}
+{{ define "main" }}
+{{- $hero := partial "hero.html" . }}
+<main id="main">
+  <section class="hero"{{ with $hero.img }} style="--hero-img:url('{{ . }}')"{{ end }}>
+    <div class="hero-inner">
+      <h1 class="hero-title">{{ $hero.title | plainify }}</h1>
+      {{- with $hero.sub }}
+      <p class="hero-sub">{{ . | plainify }}</p>
+      {{- end }}
+    </div>
+    <a class="hero-arrow" href="#recent" aria-label="{{ i18n "posts" }}">
+      <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M6 9.5 12 15.5 18 9.5"/></svg>
+    </a>
+  </section>
+
+  <div class="wrap" id="recent">
+    <div class="section-head">
+      <h2>{{ i18n "posts" }}</h2>
+      {{- with site.GetPage "/archives" }}
+      <a class="section-more" href="{{ .RelPermalink }}">{{ i18n "archives" }} →</a>
+      {{- end }}
+    </div>
+
+    {{- $posts := where site.RegularPages "Section" (index (site.Params.mainSections | default (slice "posts")) 0) }}
+    <div class="cards">
+      {{- range $i, $p := first 5 $posts }}
+        {{- partial "card.html" (dict "p" $p "idx" $i) }}
+      {{- end }}
+    </div>
+
+    {{- with site.GetPage "/posts" }}
+    <p class="home-all"><a class="btn" href="{{ .RelPermalink }}">{{ i18n "post_count" (dict "Count" (len $posts)) }}</a></p>
+    {{- end }}
+  </div>
+</main>
+{{ end }}

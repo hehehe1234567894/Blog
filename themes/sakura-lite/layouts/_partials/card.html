@@ -1,0 +1,56 @@
+{{- /*
+  横向文章卡片（参考站的核心观感：左文右图、白底圆角、轻阴影）。
+  参数：dict "p" 页面 "idx" 序号（用于左右交错）
+  封面策略：显式 cover.image > 自动生成的 SVG 封面 > 不渲染图片块（CSS 用渐变兜底）。
+  浏览量在这里没有数据源（纯静态站），换成「阅读时长 / 字数」，比编一个假数字诚实。
+*/ -}}
+{{- $p := .p }}
+{{- $idx := .idx | default 0 }}
+{{- $alt := eq (mod $idx 2) 1 }}
+
+{{- /* 封面：显式配置优先。hiddenInList / hidden 时不显示，尊重原 front matter。 */ -}}
+{{- $hidden := or $p.Params.cover.hidden $p.Params.cover.hiddenInList }}
+{{- $img := "" }}
+{{- if not $hidden }}
+  {{- with $p.Params.cover.image }}
+    {{- $img = . | absURL }}
+  {{- else }}
+    {{- /* 没有封面就现生成一张：主题色渐变色块 + 右侧柔光，避免卡片左图位留白破图。
+           SVG 体积极小，不需要走图片处理管线。 */ -}}
+    {{- $svg := `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb0c4"/><stop offset=".55" stop-color="#f78fb3"/><stop offset="1" stop-color="#b98cf0"/></linearGradient><radialGradient id="h" cx=".78" cy=".24" r=".62"><stop offset="0" stop-color="#ffffff" stop-opacity=".5"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs><rect width="600" height="340" fill="url(#g)"/><rect width="600" height="340" fill="url(#h)"/><circle cx="470" cy="70" r="120" fill="#ffffff" fill-opacity=".12"/><circle cx="120" cy="290" r="90" fill="#ffffff" fill-opacity=".1"/></svg>` }}
+    {{- $name := printf "covers/auto-%s.svg" (md5 $p.RelPermalink) }}
+    {{- with resources.FromString $name $svg }}{{ $img = .RelPermalink }}{{ end }}
+  {{- end }}
+{{- end }}
+
+<article class="card{{ if $alt }} card-alt{{ end }}{{ if not $img }} card-nocover{{ end }}">
+  <div class="card-text">
+    <p class="card-meta">
+      <time datetime="{{ $p.Date.Format "2006-01-02" }}">{{ $p.Date.Format (site.Params.DateFormat | default "2006-01-02") }}</time>
+      <span class="dot">·</span>
+      <span>{{ i18n "read_time" $p.ReadingTime }}</span>
+      {{- if site.Params.ShowWordCount }}
+      <span class="dot">·</span>
+      <span>{{ i18n "words" $p.WordCount }}</span>
+      {{- end }}
+    </p>
+
+    <h2 class="card-title"><a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a></h2>
+
+    {{- with $p.Params.tags }}
+    <p class="card-tags">
+      {{- range . }}<span class="tag-chip">{{ . }}</span>{{ end }}
+    </p>
+    {{- end }}
+
+    <p class="card-excerpt">{{ $p.Summary | plainify | truncate 110 }}</p>
+
+    <a class="card-more" href="{{ $p.RelPermalink }}" aria-label="{{ $p.Title }}">{{ i18n "read_more" }} →</a>
+  </div>
+
+  {{- with $img }}
+  <div class="card-thumb">
+    <img src="{{ . }}" alt="{{ $p.Params.cover.alt | default $p.Title }}" loading="lazy" decoding="async">
+  </div>
+  {{- end }}
+</article>
