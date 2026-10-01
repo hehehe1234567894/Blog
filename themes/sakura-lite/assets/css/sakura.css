@@ -41,10 +41,14 @@
   --wrap: 900px;          /* 参考站正文列 780px；这里给卡片留一点余量 */
   --nav-h: 60px;
 
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-    "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
-  --font-mono: "JetBrains Mono", "Cascadia Code", ui-monospace, Menlo, Consolas,
-    "Sarasa Mono SC", monospace;
+  /* 字体跟参考站对齐（它用的是 Google Fonts 的 Ubuntu + Source Code Pro + Noto Serif SC）：
+     Ubuntu / Source Code Pro 只覆盖拉丁，已被自托管在 assets/fonts（见 partials/fonts.html）；
+     中文没有跟 Ubuntu 配套的字体，继续落系统里最好看的那个（PingFang / 微软雅黑 / 思源黑体）。
+     所以字体栈的顺序是「先拉丁字体、再中文回退」——拉丁字形由 Ubuntu 出，汉字交给系统。 */
+  --font: Ubuntu, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", "Noto Sans CJK SC", sans-serif;
+  --font-mono: "Source Code Pro", "JetBrains Mono", "Cascadia Code", ui-monospace,
+    Menlo, Consolas, "Sarasa Mono SC", monospace;
 
   --ease: cubic-bezier(.22, .8, .32, 1);
   --dur: .3s;
@@ -217,10 +221,73 @@ html[data-theme="dark"] .theme-btn .i-moon { display: block; }
 .hero-inner { position: relative; z-index: 2; padding: 0 22px; max-width: 780px; }
 .hero-title {
   margin: 0;
-  font-size: clamp(2.1rem, 6vw, 3.5rem);
+  /* 故障特效的伪元素是绝对定位的，标题一旦折行两层就会错位 —— 所以禁止换行，
+     并且把字号跟着视口收一点，窄屏也放得下（320px 上约 21px，够读）。 */
+  font-size: clamp(1.55rem, 6.2vw, 3.5rem);
+  white-space: nowrap;
   letter-spacing: .02em;
   text-shadow: 0 3px 24px rgba(0, 0, 0, .55);
 }
+/* ---------- 4b. 首页标题的故障（glitch）特效 ---------- */
+/* 想要的是「偶尔抽一下」的 CRT 故障感，不是一直抖：一直抖很快就看累了。
+   所以平时只有 1px 的 RGB 分离，真正的撕裂集中在每 4.2s 里那 ~0.4s（88%~94%）。
+   两层伪元素用 data-text 复制原文，靠 clip-path 切条 + 位移 + screen 混合做出霓虹错位。 */
+.glitch {
+  position: relative;
+  display: inline-block;
+  animation: glitch-main 4.2s steps(1, end) infinite;
+}
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute; left: 0; top: 0; width: 100%;
+  pointer-events: none;
+  mix-blend-mode: screen;          /* 叠在深色封面上出霓虹感，而不是糊成一团 */
+}
+.glitch::before {                /* 青色层 */
+  color: #58e8ff;
+  transform: translate(-1px, 0);
+  animation: glitch-cyan 4.2s steps(1, end) infinite;
+}
+.glitch::after {                 /* 品红层 */
+  color: #ff5ea8;
+  transform: translate(1px, 0);
+  animation: glitch-magenta 4.2s steps(1, end) infinite;
+}
+/* 鼠标悬停时抽得更勤一点（想多看两眼的时候） */
+.hero-title:hover .glitch,
+.hero-title:hover .glitch::before,
+.hero-title:hover .glitch::after { animation-duration: 1.3s; }
+
+@keyframes glitch-main {
+  0%, 88%, 100% { transform: translate(0, 0); }
+  89%  { transform: translate(-2px, 1px) skewX(-2deg); }
+  90%  { transform: translate(2px, -1px); }
+  92%  { transform: translate(-1px, 0) skewX(1.5deg); }
+  93%  { transform: translate(1px, 1px); }
+  94%  { transform: translate(0, 0); }
+}
+@keyframes glitch-cyan {
+  0%, 88%, 100% { opacity: 0; clip-path: inset(50% 0 50% 0); }
+  89% { opacity: .95; clip-path: inset(4% 0 66% 0);  transform: translate(-5px, -1px); }
+  90% { opacity: .95; clip-path: inset(58% 0 18% 0); transform: translate(5px, 1px); }
+  92% { opacity: .95; clip-path: inset(30% 0 46% 0); transform: translate(-3px, 0); }
+  93% { opacity: .95; clip-path: inset(12% 0 74% 0); transform: translate(4px, 0); }
+  94% { opacity: 0; }
+}
+@keyframes glitch-magenta {
+  0%, 88%, 100% { opacity: 0; clip-path: inset(50% 0 50% 0); }
+  89% { opacity: .9; clip-path: inset(64% 0 8% 0);   transform: translate(4px, 1px); }
+  91% { opacity: .9; clip-path: inset(22% 0 58% 0);  transform: translate(-4px, -1px); }
+  92% { opacity: .9; clip-path: inset(46% 0 34% 0);  transform: translate(3px, 0); }
+  94% { opacity: 0; }
+}
+/* 读屏与「减少动态效果」：直接不显示两层副本，标题就是干净的静态文字 */
+@media (prefers-reduced-motion: reduce) {
+  .glitch, .glitch::before, .glitch::after { animation: none; }
+  .glitch::before, .glitch::after { display: none; }
+}
+
 .hero-sub {
   margin: 18px 0 0;
   font-size: clamp(.95rem, 1.6vw, 1.08rem);
@@ -619,7 +686,24 @@ html[data-theme="dark"] .post-body pre { background: #1a1d24; border-color: #2c3
     display: none;
   }
   body.nav-open .nav-links { display: flex; }
+  /* 菜单展开时整条导航变成一张浅色面板：否则首页（hero 上白字）展开的是白底面板，
+     菜单项还是白的 —— 白字白底，等于没有菜单（主人截图发现的那个 bug）。
+     三处都要改色：品牌名、图标、以及**菜单项本身**（第三处原来漏了）。 */
+  body.nav-open .nav {
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
   body.nav-open .brand, body.nav-open .nav-icon { color: var(--text); text-shadow: none; }
+  body.nav-open .nav-icon:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
+  body.nav-open .nav-links a {
+    color: var(--text); text-shadow: none;
+    padding: 13px 20px;                       /* 手机上要够大才点得着 */
+    border-bottom: 0; border-left: 3px solid transparent;
+  }
+  body.nav-open .nav-links a:hover,
+  body.nav-open .nav-links a.is-active { color: var(--accent); border-left-color: var(--accent); }
 
   .hero { min-height: 88vh; min-height: 88svh; }
   .hero::before { background-position: center 38%; }

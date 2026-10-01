@@ -81,6 +81,7 @@
 </script>
 
 {{- /* CSS：Hugo 的资源管道会指纹化 + 加长缓存头。不用 sass，纯 CSS 变量。 */ -}}
+{{- partial "fonts.html" . }}
 {{- $css := resources.Get "css/sakura.css" | minify | fingerprint }}
 <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
 
