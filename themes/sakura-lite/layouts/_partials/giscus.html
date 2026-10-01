@@ -1,15 +1,40 @@
 {{- /*
   Giscus 评论（GitHub Discussions）。
-  配置全部来自站点 hugo.toml 的 [params.giscus]，主题不写死任何 id —— 
+  配置全部来自站点 hugo.toml 的 [params.giscus]，主题不写死任何 id ——
   仓库改名时只改配置，这正是之前踩过的坑（写死旧仓库名会 403 not installed）。
   注意：giscus 的 iframe 需要真实域名下的 Discussion 才能加载，本地预览会一直转圈，
   这是预期行为，不是主题的 bug。
+
+  深浅色：不用配置里的 preferred_color_scheme —— 它跟的是「操作系统」，
+  不是站点右上角那个切换按钮，所以站点切深色时评论会留在浅色。
+  这里在 client.js 之前把它的 data-theme 改成当前站点主题（giscus 启动时读的就是
+  这个属性，于是首帧颜色就是对的，不会先浅后深闪一下），之后由 sakura.js 的
+  syncGiscus() 在切换时 postMessage 动态同步。
+  ⚠️ 内联脚本里的注释必须写成 JS 注释，不能写 Hugo 模板注释：
+     模板注释在 script 标签里会被当普通文本吐出去，直接变成语法错误。
+     另外本文件的模板注释里不能出现「星号加斜杠」这两个字符的连写，
+     那会提前结束整段注释，Hugo 会报 comment ends before closing delimiter。
 */ -}}
 {{- $g := site.Params.giscus }}
 {{- if and $g $g.repo $g.repoId $g.categoryId }}
+{{- $gtheme := $g.theme | default "preferred_color_scheme" }}
 <section class="comments" id="comments">
   <h2 class="comments-title">{{ i18n "comments" }}</h2>
+  {{- /* 必须排在 client.js 之前，且不能 defer：这是 giscus 首帧配色的唯一来源 */ -}}
+  <script>
+    /* 只有站点配了 preferred_color_scheme（= 想跟随系统）时才由我们接管；
+       站主若显式配了 light/dark，就尊重配置，别抢它的活。 */
+    if ({{ $gtheme }} === 'preferred_color_scheme') {
+      var savedTheme = null;
+      try { savedTheme = localStorage.getItem('theme'); } catch (e) {}
+      var isDark = savedTheme ? savedTheme === 'dark'
+                              : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.getElementById('giscus-client')
+        .setAttribute('data-theme', isDark ? 'dark_dimmed' : 'light');
+    }
+  </script>
   <script src="https://giscus.app/client.js"
+          id="giscus-client"
           data-repo="{{ $g.repo }}"
           data-repo-id="{{ $g.repoId }}"
           data-category="{{ $g.category }}"
@@ -19,7 +44,7 @@
           data-reactions-enabled="{{ $g.reactionsEnabled | default "1" }}"
           data-emit-metadata="{{ $g.emitMetadata | default "0" }}"
           data-input-position="{{ $g.inputPosition | default "top" }}"
-          data-theme="{{ $g.theme | default "preferred_color_scheme" }}"
+          data-theme="{{ $gtheme }}"
           data-lang="{{ $g.lang | default "zh-CN" }}"
           data-loading="lazy"
           crossorigin="anonymous"

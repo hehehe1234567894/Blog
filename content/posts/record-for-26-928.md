@@ -4,6 +4,11 @@ date: 2026-09-28
 summary: "在使用gitignore时遇到的一些问题"
 tags: ["Git","VS Code"]
 categories: ["Git"]
+cover:
+  image: "/images/covers/gitignore.svg"
+  alt: "gitignore 踩坑记录封面"
+  relative: false
+  hiddenInSingle: true
 ShowToc: true
 TocOpen: false
 draft: false

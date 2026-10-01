@@ -1,8 +1,7 @@
 /* =========================================================================
    sakura-lite —— 唯一的脚本文件
-   原主题栈是 709 行的 extend_footer.html：6 个功能块各自绑自己的 DOMContentLoaded，
-   初始化时机互相咬合，改一处崩一片。这里只有一个入口、一段初始化，每个模块各自
-   try 包住 —— 任何一块坏了都不影响其余。
+   原主题栈是 709 行的 extend_footer.html：6 个功能块各自绑 DOMContentLoaded，初始化
+   时机互相咬合，改一处崩一片。现在只有一个入口、一段初始化，每个模块 try 包住。
    模块：1 主题切换 / 2 导航 / 3 樱花 / 4 看板娘 / 5 回顶 / 6 本地搜索
    ========================================================================= */
 (function () {
@@ -22,24 +21,41 @@
     if (saved === 'dark' || saved === 'light') return saved;
     return mq && mq.matches ? 'dark' : 'light';
   }
-  function applyTheme(t) {
-    root.setAttribute('data-theme', t);
-    /* giscus 的 iframe 不读页面 CSS，必须 postMessage 告诉它换配色 */
+  /* iframe 里的 giscus 不读本页 CSS，只能 postMessage 让它换配色。只发一次不够：
+     giscus 是 async 加载的，刚打开页面时 iframe 还不存在，那时发消息等于石沉大海。
+     所以切换时发 + 出现后补发，并按「最后一次想要的配色」去重，避免重复刷。 */
+  var giscusTheme = null;
+  function syncGiscus(t, force) {
+    if (!force && t === giscusTheme) return;
+    giscusTheme = t;
     var f = doc.querySelector('iframe.giscus-frame');
     if (!f || !f.contentWindow) return;
     f.contentWindow.postMessage(
-      { giscus: { setConfig: { theme: t === 'dark' ? 'dark' : 'light' } } }, 'https://giscus.app'
+      { giscus: { setConfig: { theme: t === 'dark' ? 'dark_dimmed' : 'light' } } },
+      'https://giscus.app'
     );
+  }
+  function applyTheme(t) {
+    root.setAttribute('data-theme', t);
+    syncGiscus(t);
   }
   try {
     var btn = $('theme-toggle');
-    if (btn) {
-      btn.addEventListener('click', function () {
-        var next = currentTheme() === 'dark' ? 'light' : 'dark';
-        try { localStorage.setItem('theme', next); } catch (e) {}
-        applyTheme(next);
-      });
-    }
+    if (btn) btn.addEventListener('click', function () {
+      var next = currentTheme() === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem('theme', next); } catch (e) {}
+      applyTheme(next);
+    });
+    /* iframe 由 giscus 的 async 脚本后插入，出现时机不确定，直接轮询等它（比监听
+       load 稳）。没等到也无所谓，用户切主题时那次照样会发。上限 20×250ms。 */
+    var tries = 0, wait = window.setInterval(function () {
+      if (doc.querySelector('iframe.giscus-frame')) {
+        window.clearInterval(wait);
+        syncGiscus(currentTheme(), true);
+      } else if (++tries > 20) {
+        window.clearInterval(wait);
+      }
+    }, 250);
     if (mq && mq.addEventListener) {
       /* 没手动设过偏好时，系统切深浅色要实时跟上 */
       mq.addEventListener('change', function (e) {
@@ -89,20 +105,16 @@
 
       var make = function (y) {
         var s = 0.5 + Math.random() * 0.9;   /* 大小即「远近」，同时决定下落速度 */
-        return {
-          x: Math.random() * W, y: y, s: s,
-          vy: (0.22 + s * 0.5) * dpr,
-          vx: (Math.random() - 0.5) * 0.35 * dpr,
+        return { x: Math.random() * W, y: y, s: s,
+          vy: (0.22 + s * 0.5) * dpr, vx: (Math.random() - 0.5) * 0.35 * dpr,
           rot: Math.random() * 6.283, vr: (Math.random() - 0.5) * 0.02,
-          ph: Math.random() * 6.283, a: 0.28 + s * 0.34
-        };
+          ph: Math.random() * 6.283, a: 0.28 + s * 0.34 };
       };
       var resize = function () {
         dpr = Math.min(2, window.devicePixelRatio || 1);
         W = cv.width = Math.floor(window.innerWidth * dpr);
         H = cv.height = Math.floor(window.innerHeight * dpr);
-        cv.style.width = window.innerWidth + 'px';
-        cv.style.height = window.innerHeight + 'px';
+        cv.style.width = window.innerWidth + 'px'; cv.style.height = window.innerHeight + 'px';
         /* 数量按宽度算但封顶 34：再多就从「细雪」变成噪点 */
         var n = Math.min(34, Math.round(window.innerWidth / 46));
         petals = [];
@@ -118,19 +130,14 @@
           p.y += p.vy;
           p.rot += p.vr;
           if (p.y - 20 > H) { petals[i] = make(-20 * dpr); continue; }
-          if (p.x < -30 * dpr) p.x = W + 20 * dpr;
-          if (p.x > W + 30 * dpr) p.x = -20 * dpr;
+          if (p.x < -30 * dpr) p.x = W + 20 * dpr; else if (p.x > W + 30 * dpr) p.x = -20 * dpr;
 
           ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.rot);
-          ctx.globalAlpha = p.a;
+          ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = p.a;
           /* 花瓣就是一个椭圆：比画 5 瓣樱花便宜 5 倍，缩到这个尺寸看不出差别 */
           ctx.beginPath();
           ctx.ellipse(0, 0, 5.4 * p.s * dpr, 3.1 * p.s * dpr, 0, 0, 6.283);
-          ctx.fillStyle = '#f9b8ce';
-          ctx.fill();
-          ctx.restore();
+          ctx.fillStyle = '#f9b8ce'; ctx.fill(); ctx.restore();
         }
         raf = window.requestAnimationFrame(frame);
       };
@@ -139,8 +146,7 @@
       window.addEventListener('resize', resize, { passive: true });
       /* 切到后台就停：省电，回来接着跑 */
       doc.addEventListener('visibilitychange', function () {
-        if (doc.hidden) { window.cancelAnimationFrame(raf); raf = 0; }
-        else if (!raf) frame();
+        if (doc.hidden) { window.cancelAnimationFrame(raf); raf = 0; } else if (!raf) frame();
       });
       frame();
     }
@@ -151,13 +157,11 @@
     var girl = $('girl') || $('girl-wrap'), bubble = $('girl-bubble');
     if (girl && bubble) {
       var talks = ['今天也要写代码呀～', 'C 语言作业交了没？', '记得 git push！',
-        '有问题就在文章下面留言～', '摸鱼一时爽，一直摸鱼一直爽'];
-      var ti = 0, bt = null;
+        '有问题就在文章下面留言～', '摸鱼一时爽，一直摸鱼一直爽'], ti = 0, bt = null;
       girl.style.cursor = 'pointer';
       girl.addEventListener('click', function () {
         bubble.textContent = talks[ti % talks.length];
-        ti++;
-        bubble.classList.add('show');
+        ti++; bubble.classList.add('show');
         window.clearTimeout(bt);
         bt = window.setTimeout(function () { bubble.classList.remove('show'); }, 3200);
       });
@@ -181,17 +185,15 @@
 
   /* ---------- 6. 本地搜索 ---------- */
   try {
-    var input = $('search-input'), results = $('search-results'),
-        status = $('search-status'), fallback = $('search-fallback');
+    var input = $('search-input'), results = $('search-results'), status = $('search-status'),
+        fallback = $('search-fallback');
     if (input && results && status) {
       /* 索引走 /index.json（主题的 home.json.json 生成），不内联：内联得把 jsonify
          写在 define "main" 之前，而 Hugo 0.166 的 block 模板只要 define 之前有任何
          内容就静默失效。取不到索引就露出 fallback。 */
       var idxURL = (window.__SAKURA && window.__SAKURA.searchIndex) || '/index.json';
       var ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
-      var esc = function (s) {
-        return String(s).replace(/[&<>"]/g, function (c) { return ESC[c]; });
-      };
+      var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return ESC[c]; }); };
       /* 先转义再插 <mark>，否则摘要里的 <> 会破坏结构（也是 XSS 面） */
       var mark = function (text, q) {
         var i = (text || '').toLowerCase().indexOf(q);
@@ -225,8 +227,7 @@
       });
 
       fetch(idxURL).then(function (r) {
-        if (!r.ok) throw new Error('http ' + r.status);
-        return r.json();
+        if (!r.ok) throw new Error('http ' + r.status); return r.json();
       }).then(function (data) {
         if (!data || !data.length) throw new Error('empty');
         /* 每条预先拼一个小写长串做检索：中文没有词边界，substring 匹配最省事，
