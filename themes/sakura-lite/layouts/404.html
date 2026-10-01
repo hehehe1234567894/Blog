@@ -1,0 +1,13 @@
+{{- /* 404：保持和其他页面一样的骨架，给回主页/文章/搜索的出口。 */ -}}
+{{ define "main" }}
+<div class="err-page">
+  <p class="err-code">404</p>
+  <h1 class="page-title">{{ i18n "not_found" }}</h1>
+  <p class="page-desc">{{ i18n "not_found_hint" }}</p>
+  <p class="err-links">
+    <a class="btn" href="{{ "/" | relURL }}">{{ i18n "back_home" }}</a>
+    <a class="btn" href="{{ "/posts/" | relURL }}">{{ i18n "posts" }}</a>
+    <a class="btn" href="{{ "/search/" | relURL }}">{{ i18n "search" }}</a>
+  </p>
+</div>
+{{ end }}

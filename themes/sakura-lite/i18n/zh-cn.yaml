@@ -1,0 +1,92 @@
+# 主题自带中文文案。站点根目录 i18n/zh-cn.yaml 会覆盖同名 id，
+# 已存在的 id（home / toc / prev_page …）在那边有定义，这里补齐主题自己用到的。
+- id: home
+  translation: "主页"
+
+- id: toc
+  translation: "目录"
+
+- id: read_more
+  translation: "阅读全文"
+
+- id: posts
+  translation: "文章"
+
+- id: archives
+  translation: "归档"
+
+- id: tags
+  translation: "标签"
+
+- id: categories
+  translation: "分类"
+
+- id: search
+  translation: "搜索"
+
+- id: search_placeholder
+  translation: "输入关键词…"
+
+- id: search_hint
+  translation: "在标题、摘要和正文里查找文章。"
+
+- id: search_empty
+  translation: "没有匹配的文章，换个词试试？"
+
+- id: search_ready
+  translation: "搜索索引未找到，暂时无法搜索。"
+
+- id: prev_post
+  translation: "上一篇"
+
+- id: next_post
+  translation: "下一篇"
+
+- id: prev_page
+  translation: "上一页"
+
+- id: next_page
+  translation: "下一页"
+
+- id: read_time
+  translation:
+    one: "1 分钟"
+    other: "{{ .Count }} 分钟"
+
+- id: words
+  translation:
+    one: "字"
+    other: "{{ .Count }} 字"
+
+- id: no_posts
+  translation: "还没有文章"
+
+- id: not_found
+  translation: "页面走丢了"
+
+- id: not_found_hint
+  translation: "这个地址下没有内容，回主页看看吧。"
+
+- id: back_home
+  translation: "返回主页"
+
+- id: comments
+  translation: "评论"
+
+- id: copyright
+  translation: "保留所有权利"
+
+- id: powered_by
+  translation: "由 Hugo 强力驱动"
+
+- id: switch_theme
+  translation: "切换主题"
+
+- id: more
+  translation: "更多"
+
+- id: updated
+  translation: "更新于"
+
+- id: post_count
+  translation: "共 {{ .Count }} 篇"

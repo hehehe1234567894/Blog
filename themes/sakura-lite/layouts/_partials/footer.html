@@ -1,0 +1,32 @@
+{{- /*
+  页脚：参考站是「竖线 + 樱花图标 + 两行居中版权」，这里保留居中结构。
+  必须出现的东西：版权、Powered by Hugo、RSS。
+*/ -}}
+<footer class="foot">
+  <div class="foot-flower" aria-hidden="true">{{ partial "flower.html" . }}</div>
+
+  <p class="foot-line">
+    <span>© {{ now.Year }} {{ site.Title }}</span>
+    <span class="sep">·</span>
+    <span>{{ i18n "copyright" }}</span>
+  </p>
+
+  <p class="foot-line foot-dim">
+    <span>{{ i18n "powered_by" }}</span>
+    <span class="sep">·</span>
+    <a href="{{ "index.xml" | relURL }}">RSS</a>
+    {{- with site.Params.author }}
+    <span class="sep">·</span>
+    <span>{{ . }}</span>
+    {{- end }}
+  </p>
+
+  {{- /* 窄屏（<=1040px）看板娘不浮动，改由这里随文档流排在页脚下方。
+         这是踩过的坑：浮动时会压住 giscus 的发送按钮。 */ -}}
+  {{- with resources.Get "img/kanban-girl.png" }}
+  <div class="girl-inline">
+    {{- $g := .Resize "240x webp q80" }}
+    <img src="{{ $g.RelPermalink }}" width="{{ $g.Width }}" height="{{ $g.Height }}" alt="看板娘" loading="lazy" draggable="false">
+  </div>
+  {{- end }}
+</footer>

@@ -1,0 +1,47 @@
+{{- /*
+  列表页模板，被这几处共用：
+    · /posts/          栏目列表（有分页）
+    · /tags/xxx/ /categories/xxx/  某个标签/分类下的文章（无分页，直接列完）
+    · /tags/ /categories/          术语总览（走 terms.html / taxonomy.html）
+  分页只在「有 .Paginator 且不止一页」时渲染，短列表不出现空的分页条。
+*/ -}}
+{{ define "main" }}
+{{- /* Hugo 给没有 _index.md 的栏目自动起名「Posts」（= 栏目名首字母大写），
+       界面上就会出现英文词。这里做一次兜底映射，保证中文界面不冒出英文标题。 */ -}}
+{{- $title := .Title }}
+{{- if eq $title "Posts" }}{{ $title = i18n "posts" }}{{ end }}
+{{- if eq $title "Tags" }}{{ $title = i18n "tags" }}{{ end }}
+{{- if eq $title "Categories" }}{{ $title = i18n "categories" }}{{ end }}
+
+<header class="page-head">
+  <h1 class="page-title">{{ $title | default (i18n "posts") }}</h1>
+  {{- with .Description }}<p class="page-desc">{{ . }}</p>{{ end }}
+  {{- if not (or .Description .Content) }}<p class="page-desc">{{ i18n "post_count" (dict "Count" (len .Pages)) }}</p>{{ end }}
+</header>
+
+{{- /* 列表页顶上放个搜索入口：参考站没有，但站点的搜索页需要一个入口，
+       放这里比多一个菜单项更省地方 */ -}}
+<form class="list-search" action="{{ "/search/" | relURL }}" method="get" role="search">
+  <input type="search" name="q" placeholder="{{ i18n "search_placeholder" }}" aria-label="{{ i18n "search" }}" autocomplete="off">
+</form>
+
+{{- $paginator := .Paginate .Pages }}
+{{- if $paginator.Pages }}
+<div class="cards">
+  {{- range $i, $p := $paginator.Pages }}
+    {{- partial "card.html" (dict "p" $p "idx" $i) }}
+  {{- end }}
+</div>
+{{- else }}
+<p class="empty">{{ i18n "no_posts" }}</p>
+{{- end }}
+
+{{- /* 分页：上一页 / 页码 / 下一页。只有一页时整块不渲染。 */ -}}
+{{- if gt $paginator.TotalPages 1 }}
+<nav class="pager" aria-label="pagination">
+  {{- with $paginator.Prev }}<a class="pager-btn" href="{{ .URL }}">← {{ i18n "prev_page" }}</a>{{ else }}<span class="pager-btn is-off">← {{ i18n "prev_page" }}</span>{{ end }}
+  <span class="pager-num">{{ $paginator.PageNumber }} / {{ $paginator.TotalPages }}</span>
+  {{- with $paginator.Next }}<a class="pager-btn" href="{{ .URL }}">{{ i18n "next_page" }} →</a>{{ else }}<span class="pager-btn is-off">{{ i18n "next_page" }} →</span>{{ end }}
+</nav>
+{{- end }}
+{{ end }}

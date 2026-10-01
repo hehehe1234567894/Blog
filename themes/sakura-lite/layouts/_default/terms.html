@@ -1,0 +1,28 @@
+{{- /*
+  术语总览：/tags/ 与 /categories/。
+  默认主题会把标签渲染成一个巨大的横排文字云，这里改成卡片网格 —— 
+  既好看也更好点（每个格子都是整块可点区域）。
+*/ -}}
+{{ define "main" }}
+{{- $isCat := eq .Data.Plural "categories" }}
+{{- $title := i18n "tags" }}
+{{- if $isCat }}{{ $title = i18n "categories" }}{{ end }}
+{{- /* Hugo 给 /tags/ 自动起的标题就是英文 "Tags"，界面上不能出现英文词，所以
+       标题等于内置英文名时一律换成 i18n 文案 */ -}}
+{{- $h1 := .Title }}
+{{- if or (eq $h1 "Tags") (eq $h1 "Categories") }}{{ $h1 = $title }}{{ end }}
+
+<header class="page-head">
+  <h1 class="page-title">{{ $h1 | default $title }}</h1>
+  <p class="page-desc">{{ i18n "post_count" (dict "Count" (len .Data.Terms)) }}</p>
+</header>
+
+<div class="term-grid">
+  {{- range .Data.Terms.ByCount }}
+  <a class="term-card" href="{{ .Page.RelPermalink }}">
+    <span class="term-name">{{ if not $isCat }}#{{ end }}{{ .Page.Title }}</span>
+    <span class="term-count">{{ .Count }}</span>
+  </a>
+  {{- end }}
+</div>
+{{ end }}

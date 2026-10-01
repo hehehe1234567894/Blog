@@ -1,0 +1,22 @@
+{{- /*
+  首页 hero 的取值逻辑集中在 partial 里。
+  为什么不做成 home.html 顶层的变量：block 有自己的作用域，define 外面算出来的变量
+  在 block 内部读不到（Hugo 会直接报 undefined variable）。
+  取值优先级：params.sakura.* > 原 PaperMod 时期的 homeInfoParams > 站点标题/描述。
+*/ -}}
+{{- $h := site.Params.sakura | default dict }}
+{{- $img := $h.heroImage | default "" }}
+{{- $imgSmall := "" }}
+{{- if not $img }}
+  {{- with resources.Get "img/hero-src.webp" }}
+    {{- /* 1920 宽够 2K 屏；再大只是浪费流量。webp q78 视觉上无损 */ -}}
+    {{- $img = (.Process "resize 1920x webp q78").RelPermalink }}
+    {{- $imgSmall = (.Process "resize 960x webp q72").RelPermalink }}
+  {{- end }}
+{{- end }}
+{{- return (dict
+    "img" $img
+    "small" $imgSmall
+    "title" ($h.heroTitle | default site.Params.homeInfoParams.Title | default site.Title)
+    "sub" ($h.heroSubtitle | default site.Params.homeInfoParams.Content | default site.Params.description)
+) }}

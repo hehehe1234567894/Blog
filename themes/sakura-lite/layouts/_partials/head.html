@@ -1,0 +1,89 @@
+{{- /*
+  统一的 <head>。
+  为什么不用 Hugo 的 internal opengraph/SEO 模板：站点原来在 layouts/ 下有自定义的
+  opengraph 覆盖，这次把它们收回主题内，一个文件写完，避免「不知道最终用的是哪套」。
+*/ -}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1f26" media="(prefers-color-scheme: dark)">
+
+{{- $title := cond .IsHome site.Title (printf "%s · %s" .Title site.Title) }}
+{{- $desc := "" }}
+{{- with .Description }}{{ $desc = . }}{{ end }}
+{{- if not $desc }}{{ with .Summary }}{{ $desc = . }}{{ end }}{{ end }}
+{{- if not $desc }}{{ $desc = site.Params.description }}{{ end }}
+{{- /* 摘要里可能带换行和多余空格，meta 里压成一行 */ -}}
+{{- $desc = $desc | plainify | replaceRE `\s+` " " | truncate 160 }}
+
+<title>{{ $title }}</title>
+<meta name="description" content="{{ $desc }}">
+<link rel="canonical" href="{{ .Permalink }}">
+
+{{- /* 站点图标：沿用 static/ 下已经存在的文件，不额外引 CDN */ -}}
+<link rel="icon" href="{{ "favicon.ico" | relURL }}" sizes="any">
+<link rel="icon" type="image/svg+xml" href="{{ "favicon.svg" | relURL }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ "favicon-32x32.png" | relURL }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ "favicon-16x16.png" | relURL }}">
+<link rel="apple-touch-icon" href="{{ "apple-touch-icon.png" | relURL }}">
+
+{{- /* RSS：首页给站点订阅，列表页给站点订阅（Hugo 的 RSS 只有首页/栏目），
+       文章页也指回站点，避免出现 404 的 feed 链接 */ -}}
+<link rel="alternate" type="application/rss+xml" href="{{ "index.xml" | absURL }}" title="{{ site.Title }}">
+
+{{- /* Open Graph / Twitter */ -}}
+<meta property="og:type" content="{{ cond .IsPage "article" "website" }}">
+<meta property="og:title" content="{{ $title }}">
+<meta property="og:description" content="{{ $desc }}">
+<meta property="og:url" content="{{ .Permalink }}">
+<meta property="og:site_name" content="{{ site.Title }}">
+<meta property="og:locale" content="zh_CN">
+{{- $og := "" }}
+{{- with .Params.images }}{{ $og = index . 0 }}{{ end }}
+{{- if not $og }}{{ with site.Params.images }}{{ $og = index . 0 }}{{ end }}{{ end }}
+{{- with $og }}
+<meta property="og:image" content="{{ . | absURL }}">
+{{- end }}
+{{- if .IsPage }}
+{{- with .Date }}
+<meta property="article:published_time" content="{{ .Format "2006-01-02T15:04:05Z07:00" }}">
+{{- end }}
+{{- with .Lastmod }}
+<meta property="article:modified_time" content="{{ .Format "2006-01-02T15:04:05Z07:00" }}">
+{{- end }}
+{{- range .Params.tags }}
+<meta property="article:tag" content="{{ . }}">
+{{- end }}
+{{- end }}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $title }}">
+<meta name="twitter:description" content="{{ $desc }}">
+{{- with $og }}
+<meta name="twitter:image" content="{{ . | absURL }}">
+{{- end }}
+
+{{- /* 结构化数据：让搜索引擎知道这是博客而不是随便一个网页 */ -}}
+<script type="application/ld+json">
+{{- if .IsPage -}}
+{{ dict "@context" "https://schema.org" "@type" "BlogPosting" "headline" .Title "datePublished" (.Date.Format "2006-01-02") "dateModified" (.Lastmod.Format "2006-01-02") "author" (dict "@type" "Person" "name" (site.Params.author | default site.Title)) "mainEntityOfPage" (dict "@type" "WebPage" "@id" .Permalink) | jsonify }}
+{{- else -}}
+{{ dict "@context" "https://schema.org" "@type" "WebSite" "name" site.Title "url" site.BaseURL | jsonify }}
+{{- end -}}
+</script>
+
+{{- /* 站点统计：给前端脚本用的轻量数据（无外部请求） */ -}}
+<script>
+  window.__SAKURA = {
+    posts: {{ len (where site.RegularPages "Section" (index (site.Params.mainSections | default (slice "posts")) 0)) }},
+    tags: {{ len site.Taxonomies.tags }},
+    searchIndex: {{ "index.json" | relURL }}
+  };
+</script>
+
+{{- /* CSS：Hugo 的资源管道会指纹化 + 加长缓存头。不用 sass，纯 CSS 变量。 */ -}}
+{{- $css := resources.Get "css/sakura.css" | minify | fingerprint }}
+<link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+
+{{- /* 语法高亮配色单独一个文件：调色板很长，混进主 CSS 会淹没布局代码 */ -}}
+{{- $hl := resources.Get "css/chroma.css" | minify | fingerprint }}
+<link rel="stylesheet" href="{{ $hl.RelPermalink }}" integrity="{{ $hl.Data.Integrity }}">
