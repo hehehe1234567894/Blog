@@ -389,7 +389,10 @@ html[data-theme="dark"] .theme-btn .i-moon { display: block; }
   background: linear-gradient(120deg, var(--accent-soft), var(--accent-2));
 }
 .card-thumb img {
-  width: 100%; height: 100%; object-fit: cover; display: block;
+  /* object-position: left —— 封面是 1200x630，所有文字都靠左（x=88 起），右侧大片是空渐变。
+     容器比例（约 1.29~1.63）比图更"方"，cover 会左右各裁一半，正好把左边文字切掉。
+     锚到左边就等价于"只从右侧空白处裁"，任何视口宽度下文字都不会被切。 */
+  width: 100%; height: 100%; object-fit: cover; object-position: left center; display: block;
   transition: transform .6s var(--ease);
 }
 .card:hover .card-thumb img { transform: scale(1.06); }
@@ -710,7 +713,10 @@ html[data-theme="dark"] .post-body pre { background: #1a1d24; border-color: #2c3
 
   /* 卡片改上下堆叠：图在上、文在下（参考站窄屏就是这个顺序） */
   .card, .card-alt { flex-direction: column-reverse; min-height: 0; }
-  .card-thumb { flex: 0 0 auto; height: 190px; }
+  /* 原来写死 height: 190px：窄屏下图比 1200:630 宽得多，cover 改成裁上下，
+     480~720px 每边最多裁掉 150 个 SVG 单位 —— 顶上的 MIEW 和底下的副标题整条消失。
+     锁成封面自身的比例就没有任何裁切了。 */
+  .card-thumb { flex: 0 0 auto; aspect-ratio: 1200 / 630; height: auto; }
   .card-text { padding: 18px 20px 20px; }
   .card-excerpt { -webkit-line-clamp: 4; }
 
