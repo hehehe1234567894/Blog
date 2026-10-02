@@ -18,9 +18,14 @@ comments: false
 
 这个博客用来记录学习过程和踩过的坑 —— 也算是给自己留个证明。
 
-### 博客不能说很完美，有问题可以评论一下哦
-### 欢迎评论
-**反馈入口**:[blog.funnycode.site](https://blog.funnycode.site)
+## 反馈
+
+这个站谈不上完美。发现问题、或者有什么想说的，都欢迎告诉我：
+
+- **[在反馈页下面留言](https://blog.funnycode.site/posts/blog-bug-feedback/)** —— 拉到最下面就是评论区，用 GitHub 账号登录即可
+- 或者开个 [GitHub Issue](https://github.com/hehehe1234567894/MySuperBlog/issues/new)，适合带截图、贴代码
+
+顺手说一下**出问题的页面地址**、**你是手机还是电脑**，我能快很多。
 
 -----------
 
