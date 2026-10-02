@@ -7,7 +7,7 @@
   模板，页面会回落到 _default/single.html，渲染成一篇标题是「搜索」、日期 0001-01-01
   的空文章，而且不报任何错（这个坑排查了很久）。所以下面所有内容都在 define 里面。
 
-  模板名用 _default/search-lite.html + 内容页 layout: "search-lite"：
+  模板名用 _default/search-page.html + 内容页 layout: "search-page"：
   _default/search.html 这个名字在 0.166 下会被内置规则吃掉（自定义 layout 匹配不上，
   也不报错），而且 PaperMod 根目录也有同名文件会跨主题抢优先级。
 
