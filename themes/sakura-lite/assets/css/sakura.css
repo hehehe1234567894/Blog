@@ -435,7 +435,10 @@ html[data-theme="dark"] .theme-btn .i-moon { display: block; }
 .toc nav a { color: var(--text-dim); }
 .toc nav a:hover { color: var(--accent); }
 
-.post-body { font-size: 1.02rem; line-height: 1.9; }
+/* 长 URL / 长单词不换行会把整页撑出横向滚动条（手机上实测：390 的视口被撑到 462）。
+   overflow-wrap: anywhere 让它们能在任意位置断行 —— 比 word-break: break-all 温和，
+   正常的西文单词仍然整词换行。 */
+.post-body { font-size: 1.02rem; line-height: 1.9; overflow-wrap: anywhere; }
 .post-body > *:first-child { margin-top: 0; }
 .post-body p { margin: 1.05em 0; }
 .post-body h2, .post-body h3, .post-body h4 { margin: 1.9em 0 .7em; scroll-margin-top: 80px; }
