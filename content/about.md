@@ -29,7 +29,7 @@ comments: false
 
 ---
 
-**GitHub**：[github.com/hehehe1234567894](https://github.com/hehehe1234567894)
+**我的GitHub**：[github.com/hehehe1234567894](https://github.com/hehehe1234567894)
 
 **我的助理GitHub**：[github.com/MIEOEMI](https://github.com/MIEOEMI)
 
