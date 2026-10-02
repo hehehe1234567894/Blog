@@ -709,7 +709,29 @@ html[data-theme="dark"] .post-body pre { background: #1a1d24; border-color: #2c3
   body.nav-open .nav-links a.is-active { color: var(--accent); border-left-color: var(--accent); }
 
   .hero { min-height: 88vh; min-height: 88svh; }
-  .hero::before { background-position: center 38%; }
+  /* 窄屏裁切位置的来由（实测结论，别随手调回去）：
+     原图 1920x1200（1.60），手机 hero 390x743（0.53）。cover 缩放后只露出原图
+     x 35.5%~67.5% 这一条竖带，而角色的脸在 x 63%~74%、y 20%~33% —— 落在竖带之外，
+     所以**任何** background-position 都取不到她的脸（0/8/12/18/22/26/30/38% 全为否）。
+     要收进脸需露出约 33% 宽度，做不到；放大只会越裁越近，只剩躯干。
+     另：原图各横带平均亮度 118~127，整张都是亮云亮雾，没有安静区域，
+     所以「把标题挪到干净背景」在这个素材上也不成立。
+     这里只做能做到的两件事：
+       ① 位置由 38% 上移到 20%：画面下移，标题不再落在她的头发上（38% 时正压头发）；
+       ② 遮罩换成上下重、中段轻的线性渐变，把标题那一带稳定压暗一档。
+     要让她在手机上露脸，只能单独做一张竖版裁切图（站主的美术决定，未做）。
+     注意：这一行曾被站主的「更新 about.md」提交（b8731fa）带回 38%，
+     若确认是要恢复 38%，把下面两处改回即可。 */
+  .hero::before { background-position: center 20%; }
+  .hero::after {
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, .52) 0%,
+      rgba(0, 0, 0, .24) 28%,
+      rgba(0, 0, 0, .30) 52%,
+      rgba(0, 0, 0, .58) 100%
+    );
+  }
 
   /* 卡片改上下堆叠：图在上、文在下（参考站窄屏就是这个顺序） */
   .card, .card-alt { flex-direction: column-reverse; min-height: 0; }
