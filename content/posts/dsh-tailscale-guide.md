@@ -101,7 +101,7 @@ dsh web
 首次启动会在 `~/.dsh/profiles/web/` 下初始化 profile 并安装依赖（等几分钟属正常）。起来后终端会打印：
 
 ```
-dsh web: http://127.0.0.1:3080/ (LAN: http://192.168.1.5:3080/)
+dsh web: http://127.0.0.1:3080/ (LAN: http://192.168.x.y:3080/)
 ```
 
 常用参数（**都写在 `dsh web` 后面**）：
@@ -161,7 +161,7 @@ Wants=network-online.target
 
 [Service]
 User=agent
-WorkingDirectory=/home/agent
+WorkingDirectory=~
 EnvironmentFile=-/etc/dsh.env          # 里面写 DSH_WEB_TOKEN=... （chmod 600）
 ExecStart=/usr/bin/dsh web --host 0.0.0.0 --port 3080 --trusted-host 127.0.0.1 --no-open
 Restart=on-failure
@@ -285,11 +285,11 @@ Wants=network-online.target
 
 [Service]
 User=agent
-WorkingDirectory=/home/agent/tailscale
-ExecStart=/home/agent/tailscale/tailscale_1.102.3_amd64/tailscaled \
+WorkingDirectory=~/tailscale
+ExecStart=~/tailscale/tailscale_1.102.3_amd64/tailscaled \
   --tun=userspace-networking \
-  --state=/home/agent/tailscale/state/tailscaled.state \
-  --socket=/home/agent/tailscale/tailscaled.sock \
+  --state=~/tailscale/state/tailscaled.state \
+  --socket=~/tailscale/tailscaled.sock \
   --socks5-server=127.0.0.1:1055 \
   --outbound-http-proxy-listen=127.0.0.1:1056
 Restart=always

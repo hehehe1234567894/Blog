@@ -187,7 +187,7 @@ tailscale funnel 3000
 # 实测可用：用 socks5 代理访问另一台机器上的服务
 curl -s --socks5-hostname 127.0.0.1:1055 \
   -o /dev/null -w '%{http_code}\n' \
-  http://100.122.107.43:8091
+  http://100.x.y.z:8091
 ```
 
 我自己就是这么访问服务器上那些内部面板的。
@@ -206,7 +206,7 @@ curl -s --socks5-hostname 127.0.0.1:1055 \
 **把那个老脚本换成一行转发**：
 
 ```bash
-exec /bin/bash /home/agent/DSH/tools/tailscale/ts-ensure.sh watch
+exec /bin/bash ~/DSH/tools/tailscale/ts-ensure.sh watch
 ```
 
 于是监管链变成：systemd（开机自启、崩了自动拉）→ 我的脚本（每 15 秒体检）
@@ -222,9 +222,9 @@ exec /bin/bash /home/agent/DSH/tools/tailscale/ts-ensure.sh watch
 
 ```bash
 # 错的
---state=/home/agent/DSH/tools/tailscale/state
+--state=~/DSH/tools/tailscale/state
 # 对的
---statedir=/home/agent/DSH/tools/tailscale/state
+--statedir=~/DSH/tools/tailscale/state
 ```
 
 ### 2. state 目录 = 你的身份，丢了就要重登
@@ -264,7 +264,7 @@ SOCKS5 listener: listen tcp 127.0.0.1:1055: bind: address already in use
 - **能连但很慢** → `tailscale ping <对方IP>` 看是 `direct` 还是 `via DERP`。
   走 DERP 就是中继，慢是正常的。我这边实测有一次：
   ```
-  pong from git (100.122.107.43) via DERP(gz203) in 33ms
+  pong from <对方机器名> (100.x.y.z) via DERP(gz203) in 33ms
   direct connection not established
   ```
   —— 那次没打洞成功，走了自己在广州的中继，33ms 还能接受。
@@ -289,7 +289,7 @@ Tailscale 解决的是"我的机器互相看得见"，接下来自然会想把�
 我服务器上那些面板、博客都是**只绑 tailscale IP** 的：
 
 ```
-LISTEN  100.122.107.43:8091      # 只有 tailnet 能访问
+LISTEN  100.x.y.z:8091           # 只有 tailnet 能访问
 LISTEN  127.0.0.1:8091           # 本机可以
 ```
 
