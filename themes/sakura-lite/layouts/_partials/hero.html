@@ -7,16 +7,27 @@
 {{- $h := site.Params.sakura | default dict }}
 {{- $img := $h.heroImage | default "" }}
 {{- $imgSmall := "" }}
+{{- $imgMobile := "" }}
 {{- if not $img }}
   {{- with resources.Get "img/hero-src.webp" }}
     {{- /* 1920 宽够 2K 屏；再大只是浪费流量。webp q78 视觉上无损 */ -}}
     {{- $img = (.Process "resize 1920x webp q78").RelPermalink }}
     {{- $imgSmall = (.Process "resize 960x webp q72").RelPermalink }}
+    {{- /* 竖屏专用裁切块：x 864~1910 / y 120~940（原图 1920x1200）。
+       这一块完整包含角色的脸（原图 x1209~1420, y240~396），且左侧是天空留白、
+       右下是身体。为什么窄屏需要它：1920x1200（1.60）在 0.52 的手机竖屏里，
+       cover 只能露出 x 35.5%~63.8%，脸正好在窗口外 —— 任何 background-position
+       都取不到脸（实测 0/8/12/…/38% 全为否）。换成这块 1046x820（比例 1.28）后，
+       手机窗口比例 0.52~0.68 的并集都能被它覆盖，于是只裁上下不裁左右，脸稳定在画面里。
+       q82 是因为裁切块会被放得比较大，压太狠会有色带。 */ -}}
+    {{- $imgMobile = (.Crop "864x120 1046x820").Process "resize 1100x webp q82" }}
+    {{- $imgMobile = $imgMobile.RelPermalink }}
   {{- end }}
 {{- end }}
 {{- return (dict
     "img" $img
     "small" $imgSmall
+    "mobile" $imgMobile
     "title" ($h.heroTitle | default site.Params.homeInfoParams.Title | default site.Title)
     "sub" ($h.heroSubtitle | default site.Params.homeInfoParams.Content | default site.Params.description)
 ) }}

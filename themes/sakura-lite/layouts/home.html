@@ -8,7 +8,9 @@
 {{ define "main" }}
 {{- $hero := partial "hero.html" . }}
 <main id="main">
-  <section class="hero"{{ with $hero.img }} style="--hero-img:url('{{ . }}')"{{ end }}>
+  {{- /* --hero-img 是桌面/通用的封面；--hero-img-mobile 是竖屏专用裁切块（见 hero.html 的说明）。
+         窄屏媒体查询里优先用后者，拿不到就回退到前者，所以没配裁切块时行为不变。 */ -}}
+  <section class="hero"{{ with $hero.img }} style="--hero-img:url('{{ . }}'){{ with $hero.mobile }};--hero-img-mobile:url('{{ . }}'){{ end }}"{{ end }}>
     <div class="hero-inner">
       {{- /* 故障特效：文字要在 aria-label 里给读屏软件，span 里的副本标 aria-hidden，
              否则伪元素/副本会被重复朗读；data-text 是伪元素要用的原文。 */ -}}
