@@ -84,8 +84,8 @@ Tailscale 会给每台机器一个名字，通常是主机名。开了 MagicDNS 
 
 ```bash
 # 在任意一台已加入 tailnet 的机器上执行
-ping dsh-home            # 直接 ping 名字
-ssh agent@dsh-home       # 直接 ssh 过去
+ping <机器名>            # 直接 ping 名字
+ssh <你的用户>@<机器名>   # 直接 ssh 过去
 ```
 
 这比记 `100.x.y.z` 舒服太多。设备名可以在管理后台改，改完所有机器立即生效。
