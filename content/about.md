@@ -18,6 +18,12 @@ comments: false
 
 这个博客用来记录学习过程和踩过的坑 —— 也算是给自己留个证明。
 
+### 博客不能说很完美，有问题可以评论一下哦
+### 欢迎评论
+**反馈入口**:[blog.funnycode.site](https://blog.funnycode.site)
+
+-----------
+
 **GitHub**：[github.com/hehehe1234567894](https://github.com/hehehe1234567894)
 
 有问题欢迎在文章下面留言，一起交流 🙂，谢谢支持！
